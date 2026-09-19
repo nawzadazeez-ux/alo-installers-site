@@ -41,6 +41,8 @@ td input,td select{margin:0;min-width:110px}
 .spec-input{margin-top:7px!important}
 .check{width:20px;height:20px;min-width:20px}
 .msg{min-height:20px;color:var(--red);margin-top:14px}
+#adminPanel>#adminMessage:not(:empty){position:fixed;z-index:50;left:50%;bottom:24px;transform:translateX(-50%);width:min(680px,calc(100% - 32px));padding:14px 18px;border-radius:12px;background:#24110f;border:1px solid var(--red);box-shadow:0 14px 45px rgba(0,0,0,.45);text-align:center;font-weight:800}
+#adminPanel>#adminMessage.ok:not(:empty){background:#0d2419;border-color:var(--green)}
 .ok{color:var(--green)}
 @media(max-width:700px){header b{display:none}
 main{margin-top:30px}
