@@ -1,1 +1,74 @@
-:root{--bg:#07110d;--panel:#102119;--gold:#e7c65a;--text:#f4f7f5;--muted:#9fb1a8;--green:#39c98a;--red:#ff8178;--line:rgba(231,198,90,.2)}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,rgba(42,115,84,.25),transparent 35%),var(--bg);color:var(--text);font-family:Inter,"Noto Sans Arabic",sans-serif;min-height:100vh}header{height:76px;border-bottom:1px solid var(--line);padding:0 4vw;display:flex;justify-content:space-between;align-items:center;color:var(--gold)}header a{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}header img{width:43px;height:43px;object-fit:contain}main{width:min(1250px,94%);margin:50px auto}.login{width:min(460px,100%);margin:9vh auto;background:var(--panel);padding:32px;border:1px solid var(--line);border-radius:20px}.login h1{margin-top:0}.login p{color:var(--muted)}label{display:block;margin:16px 0;font-size:13px;font-weight:700}input,select{display:block;width:100%;height:45px;margin-top:7px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:#08140f;color:#fff;padding:0 12px}button{border:0;border-radius:9px;padding:11px 16px;background:var(--gold);color:#132018;font-weight:800;cursor:pointer}.login form>button{width:100%}.hidden{display:none!important}.heading{display:flex;justify-content:space-between;align-items:flex-start}.heading span{color:var(--gold);font-size:12px;font-weight:800;letter-spacing:.1em}.heading h1{font-size:clamp(30px,4vw,50px);margin:8px 0 28px}.outline{background:transparent;color:var(--red);border:1px solid rgba(255,129,120,.35)}nav{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:24px}nav button{background:transparent;color:var(--muted);border-radius:9px 9px 0 0}nav button.active{background:var(--gold);color:#132018}nav i{font-style:normal;background:var(--red);color:#fff;border-radius:99px;padding:2px 7px;margin-inline-start:5px}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.app-card,.product-form{background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:15px;padding:20px}.app-card h3,.product-form h2{margin-top:0}.app-card p{color:var(--muted);font-size:13px;line-height:1.8;margin:8px 0}.badge{display:inline-block;padding:5px 9px;border-radius:99px;background:rgba(231,198,90,.12);color:var(--gold);font-size:11px}.actions,.row-actions{display:flex;gap:8px;margin-top:15px}.row-actions{margin:0}.approve{background:var(--green)}.reject{background:rgba(255,129,120,.12);border:1px solid rgba(255,129,120,.35);color:var(--red)}.product-form{margin-bottom:20px}.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.form-grid label{margin:0}.table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:15px}table{width:100%;border-collapse:collapse;background:var(--panel);min-width:1050px}th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:start}th{font-size:12px;color:var(--gold)}td input,td select{margin:0;min-width:110px}.spec-input{margin-top:7px!important}.check{width:20px;height:20px;min-width:20px}.msg{min-height:20px;color:var(--red);margin-top:14px}.ok{color:var(--green)}@media(max-width:700px){header b{display:none}main{margin-top:30px}.cards,.form-grid{grid-template-columns:1fr}.heading{display:block}.heading .outline{margin-bottom:18px}}
+:root{--bg:#07110d;--panel:#102119;--gold:#e7c65a;--text:#f4f7f5;--muted:#9fb1a8;--green:#39c98a;--red:#ff8178;--line:rgba(231,198,90,.2)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,rgba(42,115,84,.25),transparent 35%),var(--bg);color:var(--text);font-family:Inter,"Noto Sans Arabic",sans-serif;min-height:100vh}
+header{height:76px;border-bottom:1px solid var(--line);padding:0 4vw;display:flex;justify-content:space-between;align-items:center;color:var(--gold)}
+header a{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+header img{width:43px;height:43px;object-fit:contain}
+main{width:min(1250px,94%);margin:50px auto}
+.login{width:min(460px,100%);margin:9vh auto;background:var(--panel);padding:32px;border:1px solid var(--line);border-radius:20px}
+.login h1{margin-top:0}
+.login p{color:var(--muted)}
+label{display:block;margin:16px 0;font-size:13px;font-weight:700}
+input,select{display:block;width:100%;height:45px;margin-top:7px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:#08140f;color:#fff;padding:0 12px}
+button{border:0;border-radius:9px;padding:11px 16px;background:var(--gold);color:#132018;font-weight:800;cursor:pointer}
+.login form>button{width:100%}
+.hidden{display:none!important}
+.heading{display:flex;justify-content:space-between;align-items:flex-start}
+.heading span{color:var(--gold);font-size:12px;font-weight:800;letter-spacing:.1em}
+.heading h1{font-size:clamp(30px,4vw,50px);margin:8px 0 28px}
+.outline{background:transparent;color:var(--red);border:1px solid rgba(255,129,120,.35)}
+nav{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:24px}
+nav button{background:transparent;color:var(--muted);border-radius:9px 9px 0 0}
+nav button.active{background:var(--gold);color:#132018}
+nav i{font-style:normal;background:var(--red);color:#fff;border-radius:99px;padding:2px 7px;margin-inline-start:5px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.app-card,.product-form{background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:15px;padding:20px}
+.app-card h3,.product-form h2{margin-top:0}
+.app-card p{color:var(--muted);font-size:13px;line-height:1.8;margin:8px 0}
+.badge{display:inline-block;padding:5px 9px;border-radius:99px;background:rgba(231,198,90,.12);color:var(--gold);font-size:11px}
+.actions,.row-actions{display:flex;gap:8px;margin-top:15px}
+.row-actions{margin:0}
+.approve{background:var(--green)}
+.reject{background:rgba(255,129,120,.12);border:1px solid rgba(255,129,120,.35);color:var(--red)}
+.product-form{margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.form-grid label{margin:0}
+.table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:15px}
+table{width:100%;border-collapse:collapse;background:var(--panel);min-width:1050px}
+th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:start}
+th{font-size:12px;color:var(--gold)}
+td input,td select{margin:0;min-width:110px}
+.spec-input{margin-top:7px!important}
+.check{width:20px;height:20px;min-width:20px}
+.msg{min-height:20px;color:var(--red);margin-top:14px}
+.ok{color:var(--green)}
+@media(max-width:700px){header b{display:none}
+main{margin-top:30px}
+.cards,.form-grid{grid-template-columns:1fr}
+.heading{display:block}
+.heading .outline{margin-bottom:18px}
+}
+.box{background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:20px;margin-bottom:20px}
+.box h2{margin:0 0 14px;color:#fff}
+.section-title,.toolbar,.catalog-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.section-title p,.hint{color:var(--muted);margin:6px 0 15px}
+.service-grid{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:12px}
+.calc-grid{grid-template-columns:repeat(4,minmax(150px,1fr))}
+.toolbar{margin:18px 0}
+.toolbar select{max-width:280px;margin:0}
+.catalog-list{display:grid;gap:16px}
+.catalog-card{background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:18px}
+.catalog-head{margin-bottom:14px}
+.catalog-head b{font-size:18px;color:#fff}
+.catalog-head span{background:rgba(231,198,90,.12);color:var(--gold);padding:5px 10px;border-radius:99px}
+.catalog-card select{margin:0}
+.active-label{display:flex!important;align-items:center;justify-content:space-between;min-height:69px;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:10px}
+.active-label .check{margin:0}
+.catalog-card .actions{justify-content:flex-start}
+@media(max-width:1050px){.service-grid,.calc-grid{grid-template-columns:repeat(2,minmax(160px,1fr))}
+}
+@media(max-width:700px){.service-grid,.calc-grid{grid-template-columns:1fr}
+.section-title,.toolbar{align-items:stretch;flex-direction:column}
+.toolbar select{max-width:none}
+.box,.catalog-card{padding:14px}
+}
