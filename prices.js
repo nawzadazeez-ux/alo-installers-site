@@ -101,7 +101,7 @@ window.ALO_PRICING = {
   },
 };
 
-(function loadPriceList() {
+function renderPriceList() {
   const p = window.ALO_PRICING;
   const money = value => Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
   const option = (item, extra = '') =>
@@ -135,4 +135,67 @@ window.ALO_PRICING = {
   if (transport) transport.innerHTML = transportOptions;
   const easyTransport = document.getElementById('easyTransport');
   if (easyTransport) easyTransport.innerHTML = transportOptions.replace('<option value="0">Not selected — $0</option>', '');
-})();
+}
+
+function calculatorItem(item) {
+  return {
+    id: item.code,
+    name: item.name,
+    price: Number(item.price),
+    warranty: item.warranty || 'No Warranty',
+    watts: Number(item.watts || 0),
+    kw: Number(item.kw || 0),
+    phase: item.phase || 'single',
+    maxPanels: Number(item.max_panels || 0),
+    ampsPerHour: Number(item.amps_per_hour || 0),
+    quality: item.quality || 'common',
+  };
+}
+
+function applyCalculatorConfig(config) {
+  const items = Array.isArray(config.items) ? config.items : [];
+  const enabledFor = mode => items.filter(item => item.mode === mode || item.mode === 'both');
+  const advanced = enabledFor('advanced').map(calculatorItem);
+  const easy = enabledFor('easy');
+  const tiers = {};
+  qualityOrder.forEach(quality => {
+    tiers[quality] = {
+      label: ALO_QUALITY_TIERS[quality]?.label || quality,
+      panels: easy.filter(x => x.quality === quality && x.category === 'panel').map(calculatorItem),
+      batteries: easy.filter(x => x.quality === quality && x.category === 'battery').map(calculatorItem),
+      inverters: easy.filter(x => x.quality === quality && x.category === 'inverter').map(calculatorItem),
+    };
+  });
+  const commonEasy = easy.filter(x => x.quality === 'common');
+  const s = config.settings || {};
+  window.ALO_PRICING = {
+    currency: '$',
+    qualityTiers: tiers,
+    common: {
+      batteries: commonEasy.filter(x => x.category === 'battery').map(calculatorItem),
+      threePhaseInverters: commonEasy.filter(x => x.category === 'inverter' && x.phase === '3ph').map(calculatorItem),
+    },
+    panels: advanced.filter(x => x.category === 'panel'),
+    batteries: advanced.filter(x => x.category === 'battery'),
+    inverters: advanced.filter(x => x.category === 'inverter'),
+    services: {
+      structurePerPanel: Number(s.structurePerPanel),
+      installationPerPanel: Number(s.installationPerPanel),
+      solarCablePerMeter: Number(s.solarCablePerMeter),
+      acCablePerMeter: Number(s.acCablePerMeter),
+      dcProtection: { single: Number(s.dcProtectionSingle), '3ph': Number(s.dcProtection3ph) },
+      acProtection: { single: Number(s.acProtectionSingle), '3ph': Number(s.acProtection3ph) },
+      transport: { erbil: Number(s.transportErbil), outsideErbil: Number(s.transportOutside) },
+      otherElectrical: { upTo16Panels: Number(s.otherElectricalUpTo16), above16Panels: Number(s.otherElectricalAbove16) },
+      batteryBusbar: { minimumBatteries: Number(s.batteryBusbarMinimum), price: Number(s.batteryBusbarPrice) },
+    },
+  };
+  renderPriceList();
+  window.dispatchEvent(new CustomEvent('alo-pricing-updated'));
+}
+
+renderPriceList();
+fetch('/api/portal/calculator/config', { cache: 'no-store' })
+  .then(response => response.ok ? response.json() : Promise.reject(new Error('Pricing API unavailable')))
+  .then(applyCalculatorConfig)
+  .catch(error => console.warn('Using the built-in price list:', error.message));
