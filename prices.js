@@ -195,7 +195,7 @@ function applyCalculatorConfig(config) {
 }
 
 renderPriceList();
-fetch('/api/portal/calculator/config', { cache: 'no-store' })
+fetch('/api/portal/calculator/config?refresh=' + Date.now(), { cache: 'no-store' })
   .then(response => response.ok ? response.json() : Promise.reject(new Error('Pricing API unavailable')))
   .then(applyCalculatorConfig)
   .catch(error => console.warn('Using the built-in price list:', error.message));
