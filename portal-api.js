@@ -13,6 +13,60 @@ const CALCULATOR_SEED = [
  ['deye-12-3ph','inverter','common','both','Deye 12kW Hybrid 3-Phase',1700,'5 Years Warranty',0,12,'3ph',28,0,170],['deye-16-3ph','inverter','common','both','Deye 16kW Hybrid 3-Phase',1900,'5 Years Warranty',0,16,'3ph',36,0,180],['deye-20-3ph','inverter','common','both','Deye 20kW Hybrid 3-Phase',2500,'5 Years Warranty',0,20,'3ph',50,0,190]
 ];
 const SERVICE_SEED={structurePerPanel:45,installationPerPanel:15,solarCablePerMeter:1.25,acCablePerMeter:5,dcProtectionSingle:75,dcProtection3ph:100,acProtectionSingle:75,acProtection3ph:100,transportErbil:50,transportOutside:75,otherElectricalUpTo16:100,otherElectricalAbove16:150,batteryBusbarMinimum:3,batteryBusbarPrice:150};
+const INSTALLER_PRICE_LIST=[
+ ['panel','Power Solid Solar Panel','Monocrystalline - 620W - High Efficiency 23% - 15 Years Warranty',98],
+ ['panel','LONGi Hi-MO X10 Solar Panel','655W - High Efficiency 24.26% - 15 Years Warranty',112],
+ ['inverter','Deye Hybrid Inverter 8kW','48V DC - IP65 - Single Phase - 5 Years Warranty',1125],
+ ['inverter','Deye Hybrid Inverter 12kW SP','48V DC - IP65 - Single Phase - 5 Years Warranty',1650],
+ ['inverter','Deye Hybrid Inverter 12kW 3PH','48V DC - IP65 - Three Phase - 5 Years Warranty',1650],
+ ['inverter','Deye Hybrid Inverter 14kW SP','48V DC - IP65 - Single Phase - 5 Years Warranty',1700],
+ ['inverter','Deye Hybrid Inverter 16kW SP','48V DC - IP65 - Single Phase - 5 Years Warranty',1875],
+ ['inverter','Deye Hybrid Inverter 16kW 3PH','48V DC - IP65 - Three Phase - 5 Years Warranty',1950],
+ ['inverter','Deye Hybrid Inverter 20kW 3PH','48V DC - IP65 - Three Phase - 5 Years Warranty',2500],
+ ['inverter','Deye Hybrid High Voltage Inverter 30kW','IP65 - Three Phase - 5 Years Warranty',3200],
+ ['inverter','Deye Hybrid High Voltage Inverter 50kW','IP65 - Three Phase - 5 Years Warranty',3900],
+ ['inverter','Deye Hybrid High Voltage Inverter 80kW','IP65 - Three Phase - 5 Years Warranty',5450],
+ ['inverter','Deye On-Grid Inverter 20kW','IP65 - Three Phase - 5 Years Warranty',750],
+ ['inverter','Deye On-Grid Inverter 25kW','IP65 - Three Phase - 5 Years Warranty',800],
+ ['inverter','Deye On-Grid Inverter 30kW','IP65 - Three Phase - 5 Years Warranty',1050],
+ ['inverter','Deye On-Grid Inverter 40kW','IP65 - Three Phase - 5 Years Warranty',1565],
+ ['inverter','Deye On-Grid Inverter 50kW','IP65 - Three Phase - 5 Years Warranty',1650],
+ ['inverter','Deye On-Grid Inverter 60kW','IP65 - Three Phase - 5 Years Warranty',1765],
+ ['inverter','Deye On-Grid Inverter 80kW','IP65 - Three Phase - 5 Years Warranty',2100],
+ ['inverter','Deye On-Grid Inverter 100kW','IP65 - Three Phase - 5 Years Warranty',2750],
+ ['inverter','Deye On-Grid Inverter 120kW','IP65 - Three Phase - 5 Years Warranty',3300],
+ ['inverter','Deye On-Grid Inverter 136kW','IP65 - Three Phase - 5 Years Warranty',3750],
+ ['inverter','Medal Power Hybrid Inverter 6kW','48V DC - IP54 - Single Phase - 4 Years Warranty',385],
+ ['inverter','Bryyze Hybrid Inverter 6.2kW','48V DC - IP54 - Single Phase - 2 Years Warranty',325],
+ ['battery','Viva Lithium Battery 314Ah','LiFePO4 - 6000+ Cycles - 5 Years Warranty',1600],
+ ['battery','EVE Lithium Battery 314Ah','LiFePO4 - 6000+ Cycles - 5 Years Warranty',1620],
+ ['service','BlueVoltio Circuit BVDC63A 20A','32-20A - 500V - One Year Warranty',5.4],
+ ['service','BlueVoltio Circuit BVDC63A 32A','32-32A - 500V - One Year Warranty',5.5],
+ ['service','BlueVoltio DC Fuse Holder','DC Fuse Holder - One Year Warranty',2],
+ ['service','BlueVoltio DC Fuse Link','32A / 20A / 16A - One Year Warranty',1],
+ ['service','BlueVoltio DC SPD BVN40','1000V - One Year Warranty',11],
+ ['service','BlueVoltio Mini AC 2-Pole','BV63 63A / 32A - One Year Warranty',3.2],
+ ['service','BlueVoltio Mini AC 3-Phase','BV63 3-Pole 63A / 32A - One Year Warranty',5.5],
+ ['service','BlueVoltio Contactor BVCT','22/63 NO, N - One Year Warranty',9.5],
+ ['service','BlueVoltio Board BVHT 12-Way','Distribution board',5.5],
+ ['service','BlueVoltio Board BVHT 18-Way','Distribution board',9],
+ ['service','BlueVoltio Board BVDB 18-Way','Distribution board',19],
+ ['service','BlueVoltio Board BVDB 12-Way','Distribution board',13],
+ ['service','BlueVoltio Board BVDB 18-Way Premium','Distribution board',25],
+ ['service','BlueVoltio MC4 Connector','30A - 1000V',0.5],
+ ['service','BlueVoltio Smart WiFi Meter','63A Smart Circuit - One Year Warranty',20],
+ ['service','BlueVoltio Voltage & Current Protector','63A - One Year Warranty',5.5],
+ ['service','BlueVoltio 3-Phase V & C Protector','Three Phase - One Year Warranty',26],
+ ['service','BlueVoltio Fire Extinguisher BVS32-1EL','One Year Warranty',5.8],
+ ['service','Galvanized Steel DKSN China','2mm - 5.9m',13.75],
+ ['service','Galvanized Steel DKSN Iraq','2mm - 6m',13.25],
+ ['service','Clamp','Made in China',0.5],
+ ['service','End Clamp','Made in China',0.5],
+ ['service','Base Lakesha','Made in China',1.95],
+ ['service','Triangle 3mm','Made in China',0.85],
+ ['service','Join 2mm','Made in China',0.95],
+ ['service','DC Cable','Turkey - 500m roll; price per meter',0.95]
+];
 async function ensurePortalCore(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS installers (id INTEGER PRIMARY KEY AUTOINCREMENT,full_name TEXT NOT NULL,phone TEXT NOT NULL,business TEXT,city TEXT,username TEXT NOT NULL,password_hash TEXT,password_salt TEXT,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,approved_at TEXT)").run();
  const {results:columns}=await env.DB.prepare('PRAGMA table_info(installers)').all();
@@ -23,6 +77,14 @@ async function ensurePortalCore(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS login_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT,key TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash,role,expires_at)').run();
  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_attempts_key ON login_attempts(key,created_at)').run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS installer_products (id INTEGER PRIMARY KEY AUTOINCREMENT,type TEXT NOT NULL,name TEXT NOT NULL,spec TEXT,retail_price REAL NOT NULL DEFAULT 0,trade_price REAL NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,sort_order INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+ await env.DB.prepare('CREATE TABLE IF NOT EXISTS app_migrations (key TEXT PRIMARY KEY,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)').run();
+ const imported=await env.DB.prepare('SELECT key FROM app_migrations WHERE key=?').bind('installer-price-list-2026-08-09').first();
+ if(!imported){
+  await env.DB.prepare('DELETE FROM installer_products').run();
+  await env.DB.batch(INSTALLER_PRICE_LIST.map((x,i)=>env.DB.prepare('INSERT INTO installer_products(type,name,spec,retail_price,trade_price,active,sort_order) VALUES(?,?,?,?,?,1,?)').bind(x[0],x[1],x[2],x[3],x[3],(i+1)*10)));
+  await env.DB.prepare('INSERT INTO app_migrations(key) VALUES(?)').bind('installer-price-list-2026-08-09').run();
+ }
 }
 async function ensureCalculator(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS calculator_items (id INTEGER PRIMARY KEY AUTOINCREMENT,code TEXT NOT NULL UNIQUE,category TEXT NOT NULL,quality TEXT NOT NULL DEFAULT 'common',mode TEXT NOT NULL DEFAULT 'both',name TEXT NOT NULL,price REAL NOT NULL DEFAULT 0,warranty TEXT,watts REAL NOT NULL DEFAULT 0,kw REAL NOT NULL DEFAULT 0,phase TEXT NOT NULL DEFAULT 'single',max_panels INTEGER NOT NULL DEFAULT 0,amps_per_hour REAL NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,sort_order INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
