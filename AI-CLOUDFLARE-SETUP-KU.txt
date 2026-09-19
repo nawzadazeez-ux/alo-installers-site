@@ -1,0 +1,9 @@
+چالاککردنی یاریدەدەری AI ـی ڕاستەقینە
+=====================================
+1) وێبسایتەکە وەک Cloudflare Pages project بڵاو بکەرەوە (لە Git یان Wrangler، چونکە functions/ پێویستی بە Pages Functions هەیە).
+2) بچۆ بۆ: Workers & Pages > پرۆژەکەت > Settings > Variables and Secrets
+3) Secret زیاد بکە: OPENAI_API_KEY = کلیلە نهێنییەکەی OpenAI API
+4) ئارەزوومەندانە: OPENAI_MODEL = gpt-5-mini
+5) دووبارە Deploy بکە.
+
+کلیلەکە هەرگیز لە index.html یان JavaScript ـی browser دانەنێ. ئەگەر AI بەردەست نەبێت، چاتەکە وەڵامی بنکەزانیاریی ناوخۆیی بەکار دەهێنێت.

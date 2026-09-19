@@ -1,0 +1,32 @@
+ڕێکخستنی بەشی وەستاکان — Alo Solar Energy
+
+1) لە Cloudflare Dashboard بچۆ Workers & Pages > D1 SQL Database > Create.
+   ناوی بنێ: alo-installers
+
+2) داتابەیسەکە بکەرەوە، بچۆ Console، ناوەڕۆکی schema.sql کۆپی بکە و Execute بکە.
+
+3) بچۆ Workers & Pages > پرۆژەی وێبسایت > Settings > Bindings > Add > D1 database.
+   Variable name بە تەواوی بنووسە: DB
+   داتابەیسی alo-installers هەڵبژێرە.
+
+4) لە Settings > Variables and Secrets ئەم دوو Secret ـە زیاد بکە:
+   ADMIN_USERNAME = ناوی بەکارهێنەری Admin کە خۆت دەیەوێت
+   ADMIN_PASSWORD = وشەی نهێنییەکی بەهێز (کەمەکەم 16 پیت)
+   ئەم زانیارییانە لە فایلەکان مەنووسە.
+
+5) ZIP ـەکە لە Cloudflare Pages بە Drag & Drop ئەپلۆد بکە و دووبارە Deploy بکە، چونکە Binding دوای Redeploy کار دەکات. فۆڵدەری functions لە ZIP ـەکەدایە و Backend ـەکە جێبەجێ دەکات.
+
+6) بەشی وەستاکان:
+   https://alosolarenergy.com/installers.html
+   وەستا لێرە داواکاری دەکات و دوای پەسەندکردن دەچێتە ژوورەوە.
+
+7) پەنێڵی بەڕێوەبەر:
+   https://alosolarenergy.com/admin.html
+   بە ADMIN_USERNAME و ADMIN_PASSWORD دەچیتە ژوورەوە.
+   لێرە داواکاری پەسەند/ڕەت دەکەیت و نرخەکان دەگۆڕیت.
+
+تێبینی امنیتی:
+- ADMIN_PASSWORD بۆ هیچ کەس مەبنێرە.
+- فایلەکانی functions و schema.sql لە ZIP ـەکەدا بهێڵەوە.
+- Cookies بە HttpOnly + Secure + SameSite=Strict پارێزراون.
+- وشە نهێنییەکانی وەستا بە PBKDF2 hash هەڵدەگیرێن، نەک بە نووسینی ئاسایی.
