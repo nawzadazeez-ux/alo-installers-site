@@ -13,6 +13,17 @@ const CALCULATOR_SEED = [
  ['deye-12-3ph','inverter','common','both','Deye 12kW Hybrid 3-Phase',1700,'5 Years Warranty',0,12,'3ph',28,0,170],['deye-16-3ph','inverter','common','both','Deye 16kW Hybrid 3-Phase',1900,'5 Years Warranty',0,16,'3ph',36,0,180],['deye-20-3ph','inverter','common','both','Deye 20kW Hybrid 3-Phase',2500,'5 Years Warranty',0,20,'3ph',50,0,190]
 ];
 const SERVICE_SEED={structurePerPanel:45,installationPerPanel:15,solarCablePerMeter:1.25,acCablePerMeter:5,dcProtectionSingle:75,dcProtection3ph:100,acProtectionSingle:75,acProtection3ph:100,transportErbil:50,transportOutside:75,otherElectricalUpTo16:100,otherElectricalAbove16:150,batteryBusbarMinimum:3,batteryBusbarPrice:150};
+async function ensurePortalCore(env){
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS installers (id INTEGER PRIMARY KEY AUTOINCREMENT,full_name TEXT NOT NULL,phone TEXT NOT NULL,business TEXT,city TEXT,username TEXT NOT NULL,password_hash TEXT,password_salt TEXT,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,approved_at TEXT)").run();
+ const {results:columns}=await env.DB.prepare('PRAGMA table_info(installers)').all();
+ const existing=new Set(columns.map(x=>x.name));
+ const migrations=[['full_name','TEXT'],['phone','TEXT'],['business','TEXT'],['city','TEXT'],['username','TEXT'],['password_hash','TEXT'],['password_salt','TEXT'],['status',"TEXT DEFAULT 'pending'"],['created_at','TEXT'],['approved_at','TEXT']];
+ for(const [name,type] of migrations)if(!existing.has(name))await env.DB.prepare(`ALTER TABLE installers ADD COLUMN ${name} ${type}`).run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT,token_hash TEXT NOT NULL UNIQUE,user_id INTEGER,role TEXT NOT NULL,expires_at TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS login_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT,key TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+ await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash,role,expires_at)').run();
+ await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_attempts_key ON login_attempts(key,created_at)').run();
+}
 async function ensureCalculator(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS calculator_items (id INTEGER PRIMARY KEY AUTOINCREMENT,code TEXT NOT NULL UNIQUE,category TEXT NOT NULL,quality TEXT NOT NULL DEFAULT 'common',mode TEXT NOT NULL DEFAULT 'both',name TEXT NOT NULL,price REAL NOT NULL DEFAULT 0,warranty TEXT,watts REAL NOT NULL DEFAULT 0,kw REAL NOT NULL DEFAULT 0,phase TEXT NOT NULL DEFAULT 'single',max_panels INTEGER NOT NULL DEFAULT 0,amps_per_hour REAL NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,sort_order INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS calculator_settings (key TEXT PRIMARY KEY,value REAL NOT NULL,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
@@ -38,6 +49,7 @@ export async function onRequest(context){
  if(!env.DB)return json({error:'Database binding DB is missing.'},500);
  if(!sameOrigin(request)&&method!=='GET')return json({error:'Invalid origin.'},403);
  try{
+  await ensurePortalCore(env);
   if(path==='/register'&&method==='POST'){
    const d=await body(request);if(!d)return json({error:'Invalid request.'},400);
    const fullName=clean(d.fullName),phone=clean(d.phone,30),business=clean(d.business),city=clean(d.city,60),username=clean(d.username,40).toLowerCase(),password=String(d.password||'');
