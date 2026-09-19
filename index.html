@@ -798,8 +798,12 @@ window.addEventListener('load',()=>{
   document.querySelectorAll('img:not(.intro-logo)').forEach(img=>{img.loading='lazy';img.decoding='async'});
 });
 </script>
-<script src="prices.js?v=20260916-2"></script>
+<script src="prices.js?v=4"></script>
 <script>
+window.addEventListener('alo-pricing-updated',()=>{
+  applyLanguage(localStorage.getItem('aloLanguage')||'en');
+  calculateSolar();
+});
 function setCalculatorMode(mode){
   const section=document.getElementById('calculator');
   const easy=document.getElementById('easyModeBtn'),advanced=document.getElementById('advancedModeBtn');
