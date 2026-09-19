@@ -11,3 +11,4 @@ Cloudflare Pages settings:
 - D1 binding name: `DB`
 - D1 database: `alo-installers-db`
 - Secrets: `ADMIN_USERNAME`, `ADMIN_PASSWORD`
+Admin credentials updated
