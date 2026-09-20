@@ -27,6 +27,11 @@ nav i{font-style:normal;background:var(--red);color:#fff;border-radius:99px;padd
 .app-card p{color:var(--muted);font-size:13px;line-height:1.8;margin:8px 0}
 .badge{display:inline-block;padding:5px 9px;border-radius:99px;background:rgba(231,198,90,.12);color:var(--gold);font-size:11px}
 .actions,.row-actions{display:flex;gap:8px;margin-top:15px}
+.password-reset{margin-top:16px;padding:14px;border:1px solid rgba(231,198,90,.22);border-radius:12px;background:rgba(231,198,90,.05)}
+.password-reset label{margin:0 0 10px;color:var(--gold)}
+.password-reset input{margin-top:7px}
+.reset-password-button{width:100%;background:var(--green)}
+.reset-password-button:disabled{opacity:.65;cursor:wait}
 .row-actions{margin:0}
 .approve{background:var(--green)}
 .reject{background:rgba(255,129,120,.12);border:1px solid rgba(255,129,120,.35);color:var(--red)}
