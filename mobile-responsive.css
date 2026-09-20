@@ -1,0 +1,500 @@
+/* Alo Solar Energy — mobile layout polish
+   Loaded last so these rules affect phones without changing the desktop site. */
+
+@media (max-width: 850px) {
+  html {
+    overflow-x: hidden;
+    scroll-padding-top: 82px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .container {
+    width: min(100% - 28px, 1180px);
+    max-width: 100%;
+  }
+
+  header {
+    min-height: 72px;
+  }
+
+  header .nav {
+    width: min(100% - 24px, 1180px);
+    height: 72px;
+    gap: 7px;
+  }
+
+  header .brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  header .brand img {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+  }
+
+  header .brand span {
+    max-width: 118px;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  header .lang-switcher {
+    flex: 0 0 auto;
+    gap: 2px;
+    padding: 3px;
+  }
+
+  header .lang-btn {
+    min-width: 35px;
+    min-height: 35px;
+    padding: 5px 6px;
+    justify-content: center;
+  }
+
+  header .lang-btn > span:not(.lang-flag) {
+    display: none;
+  }
+
+  header .lang-flag {
+    width: 22px;
+    height: 15px;
+  }
+
+  .menu-toggle {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+  }
+
+  header nav,
+  [dir="rtl"] header nav,
+  [dir="rtl"] header nav.open {
+    position: fixed;
+    inset: 72px 10px auto;
+    max-height: calc(100dvh - 84px);
+    padding: 10px;
+    overflow-y: auto;
+    border-radius: 0 0 18px 18px;
+  }
+
+  header nav a,
+  [dir="rtl"] header nav a,
+  [dir="rtl"] header nav.open a {
+    min-height: 46px;
+    justify-content: flex-start !important;
+    padding: 10px 13px;
+    text-align: start !important;
+  }
+
+  [dir="rtl"] header nav a {
+    flex-direction: row-reverse;
+  }
+
+  header nav .cta {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  main {
+    width: 100%;
+    overflow: clip;
+  }
+
+  section {
+    padding-block: 62px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 112px 0 58px;
+  }
+
+  .hero-grid {
+    gap: 30px;
+  }
+
+  .hero-copy {
+    min-width: 0;
+    text-align: center;
+  }
+
+  [dir="rtl"] .hero-copy {
+    text-align: center !important;
+  }
+
+  .badge {
+    margin-bottom: 15px;
+    padding: 7px 11px;
+    font-size: 10px;
+    letter-spacing: .7px;
+  }
+
+  h1,
+  [dir="rtl"] h1 {
+    margin: 0 0 16px;
+    font-size: clamp(34px, 10vw, 47px);
+    line-height: 1.12;
+    letter-spacing: -1.5px;
+    overflow-wrap: anywhere;
+    text-align: center !important;
+  }
+
+  .hero p,
+  [dir="rtl"] .hero p {
+    max-width: 560px;
+    margin: 0 auto 24px;
+    font-size: 15px;
+    line-height: 1.8;
+    text-align: center !important;
+  }
+
+  .hero .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .hero .btn {
+    width: 100%;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    text-align: center;
+  }
+
+  .hero-card {
+    width: 100%;
+    max-width: 520px;
+    padding: 20px 16px;
+    border-radius: 21px;
+  }
+
+  .hero-card img {
+    max-height: 245px;
+    object-fit: contain;
+  }
+
+  .stats {
+    gap: 7px;
+  }
+
+  .stat {
+    min-width: 0;
+    padding: 11px 6px;
+  }
+
+  .stat strong {
+    font-size: 17px;
+  }
+
+  .stat small {
+    display: block;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .section-head {
+    width: 100%;
+    margin: 0 auto 28px;
+    text-align: center;
+  }
+
+  [dir="rtl"] .section-head {
+    margin-inline: auto;
+    text-align: center !important;
+  }
+
+  h2,
+  [dir="rtl"] h2 {
+    font-size: clamp(28px, 8vw, 36px);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .section-head p,
+  [dir="rtl"] .section-head p {
+    font-size: 14px;
+    line-height: 1.75;
+    text-align: center !important;
+  }
+
+  .grid3 {
+    gap: 13px;
+  }
+
+  .card {
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+
+  .card h3 {
+    font-size: 19px;
+  }
+
+  .features {
+    gap: 25px;
+  }
+
+  .feature {
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .contact {
+    gap: 15px;
+  }
+
+  .contact-box {
+    padding: 22px 18px;
+    border-radius: 19px;
+  }
+
+  .calculator-section {
+    padding-block: 60px;
+  }
+
+  .calculator-grid {
+    gap: 16px;
+  }
+
+  .calc-card,
+  .calc-result {
+    min-width: 0;
+    padding: 20px 15px;
+    border-radius: 19px;
+  }
+
+  .calc-mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .calc-mode-btn {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px;
+    white-space: normal;
+  }
+
+  .calc-row,
+  .easy-quality-grid,
+  .easy-actions,
+  .payback-result,
+  .result-top-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .calc-field input,
+  .calc-field select,
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+    min-height: 48px;
+    font-size: 16px !important;
+  }
+
+  .calc-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .calc-actions .btn,
+  .easy-actions .btn,
+  .step-nav button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .calc-progress {
+    gap: 4px;
+  }
+
+  .calc-progress-item {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .calc-progress-item::before {
+    width: 29px;
+    height: 29px;
+  }
+
+  .calc-total {
+    font-size: 30px;
+  }
+
+  .calc-line {
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .calc-line > :last-child {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .payback-card {
+    padding: 17px 14px;
+    border-radius: 16px;
+  }
+
+  .faq-wrap {
+    width: min(100% - 28px, 900px);
+  }
+
+  .faq-item summary {
+    min-height: 60px;
+  }
+
+  .map-card {
+    border-radius: 19px;
+  }
+
+  .map-heading {
+    gap: 14px;
+    padding: 20px 16px;
+  }
+
+  .map-heading h2,
+  .map-heading p,
+  [dir="rtl"] .map-heading h2,
+  [dir="rtl"] .map-heading p {
+    text-align: center !important;
+  }
+
+  .map-link {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .map-frame {
+    height: 290px;
+    min-height: 290px;
+  }
+
+  footer {
+    padding: 28px 0 92px;
+  }
+
+  .footer-row {
+    gap: 19px;
+  }
+
+  .footer-connect {
+    width: 100%;
+    padding: 18px 0;
+  }
+
+  .footer-contact,
+  .footer-contact a {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .footer-contact .footer-email {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .contact-hub {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  [dir="rtl"] .contact-hub {
+    right: auto;
+    left: max(12px, env(safe-area-inset-left));
+  }
+
+  [dir="rtl"] .hub-options {
+    right: auto;
+    left: 0;
+  }
+
+  .hub-main {
+    width: 56px;
+    height: 56px;
+  }
+
+  .alo-robot-welcome {
+    max-width: calc(100vw - 16px);
+  }
+}
+
+@media (max-width: 390px) {
+  .container,
+  .faq-wrap {
+    width: calc(100% - 20px);
+  }
+
+  header .nav {
+    width: calc(100% - 16px);
+  }
+
+  header .brand span {
+    display: none;
+  }
+
+  .hero {
+    padding-top: 100px;
+  }
+
+  h1,
+  [dir="rtl"] h1 {
+    font-size: 32px;
+  }
+
+  .hero-card {
+    padding-inline: 11px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .partner-brand {
+    min-height: 78px;
+    padding: 9px;
+  }
+
+  .calc-card,
+  .calc-result {
+    padding-inline: 12px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 950px) {
+  header nav,
+  [dir="rtl"] header nav,
+  [dir="rtl"] header nav.open {
+    max-height: calc(100dvh - 72px);
+  }
+
+  .hero {
+    min-height: auto;
+  }
+}
