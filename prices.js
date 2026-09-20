@@ -154,40 +154,51 @@ function calculatorItem(item) {
 
 function applyCalculatorConfig(config) {
   const items = Array.isArray(config.items) ? config.items : [];
+  const fallback = window.ALO_PRICING;
   const enabledFor = mode => items.filter(item => item.mode === mode || item.mode === 'both');
   const advanced = enabledFor('advanced').map(calculatorItem);
   const easy = enabledFor('easy');
   const tiers = {};
   qualityOrder.forEach(quality => {
+    const fallbackTier = fallback.qualityTiers[quality] || { panels: [], batteries: [], inverters: [] };
+    const panels = easy.filter(x => x.quality === quality && x.category === 'panel').map(calculatorItem);
+    const batteries = easy.filter(x => x.quality === quality && x.category === 'battery').map(calculatorItem);
+    const inverters = easy.filter(x => x.quality === quality && x.category === 'inverter').map(calculatorItem);
     tiers[quality] = {
       label: ALO_QUALITY_TIERS[quality]?.label || quality,
-      panels: easy.filter(x => x.quality === quality && x.category === 'panel').map(calculatorItem),
-      batteries: easy.filter(x => x.quality === quality && x.category === 'battery').map(calculatorItem),
-      inverters: easy.filter(x => x.quality === quality && x.category === 'inverter').map(calculatorItem),
+      panels: panels.length ? panels : fallbackTier.panels,
+      batteries: batteries.length ? batteries : fallbackTier.batteries,
+      inverters: inverters.length ? inverters : fallbackTier.inverters,
     };
   });
   const commonEasy = easy.filter(x => x.quality === 'common');
   const s = config.settings || {};
+  const advancedPanels = advanced.filter(x => x.category === 'panel');
+  const advancedBatteries = advanced.filter(x => x.category === 'battery');
+  const advancedInverters = advanced.filter(x => x.category === 'inverter');
+  const commonBatteries = commonEasy.filter(x => x.category === 'battery').map(calculatorItem);
+  const commonThreePhase = commonEasy.filter(x => x.category === 'inverter' && x.phase === '3ph').map(calculatorItem);
+  const numberOr = (value, defaultValue) => Number.isFinite(Number(value)) ? Number(value) : defaultValue;
   window.ALO_PRICING = {
     currency: '$',
     qualityTiers: tiers,
     common: {
-      batteries: commonEasy.filter(x => x.category === 'battery').map(calculatorItem),
-      threePhaseInverters: commonEasy.filter(x => x.category === 'inverter' && x.phase === '3ph').map(calculatorItem),
+      batteries: commonBatteries.length ? commonBatteries : fallback.common.batteries,
+      threePhaseInverters: commonThreePhase.length ? commonThreePhase : fallback.common.threePhaseInverters,
     },
-    panels: advanced.filter(x => x.category === 'panel'),
-    batteries: advanced.filter(x => x.category === 'battery'),
-    inverters: advanced.filter(x => x.category === 'inverter'),
+    panels: advancedPanels.length ? advancedPanels : fallback.panels,
+    batteries: advancedBatteries.length ? advancedBatteries : fallback.batteries,
+    inverters: advancedInverters.length ? advancedInverters : fallback.inverters,
     services: {
-      structurePerPanel: Number(s.structurePerPanel),
-      installationPerPanel: Number(s.installationPerPanel),
-      solarCablePerMeter: Number(s.solarCablePerMeter),
-      acCablePerMeter: Number(s.acCablePerMeter),
-      dcProtection: { single: Number(s.dcProtectionSingle), '3ph': Number(s.dcProtection3ph) },
-      acProtection: { single: Number(s.acProtectionSingle), '3ph': Number(s.acProtection3ph) },
-      transport: { erbil: Number(s.transportErbil), outsideErbil: Number(s.transportOutside) },
-      otherElectrical: { upTo16Panels: Number(s.otherElectricalUpTo16), above16Panels: Number(s.otherElectricalAbove16) },
-      batteryBusbar: { minimumBatteries: Number(s.batteryBusbarMinimum), price: Number(s.batteryBusbarPrice) },
+      structurePerPanel: numberOr(s.structurePerPanel, fallback.services.structurePerPanel),
+      installationPerPanel: numberOr(s.installationPerPanel, fallback.services.installationPerPanel),
+      solarCablePerMeter: numberOr(s.solarCablePerMeter, fallback.services.solarCablePerMeter),
+      acCablePerMeter: numberOr(s.acCablePerMeter, fallback.services.acCablePerMeter),
+      dcProtection: { single: numberOr(s.dcProtectionSingle, fallback.services.dcProtection.single), '3ph': numberOr(s.dcProtection3ph, fallback.services.dcProtection['3ph']) },
+      acProtection: { single: numberOr(s.acProtectionSingle, fallback.services.acProtection.single), '3ph': numberOr(s.acProtection3ph, fallback.services.acProtection['3ph']) },
+      transport: { erbil: numberOr(s.transportErbil, fallback.services.transport.erbil), outsideErbil: numberOr(s.transportOutside, fallback.services.transport.outsideErbil) },
+      otherElectrical: { upTo16Panels: numberOr(s.otherElectricalUpTo16, fallback.services.otherElectrical.upTo16Panels), above16Panels: numberOr(s.otherElectricalAbove16, fallback.services.otherElectrical.above16Panels) },
+      batteryBusbar: { minimumBatteries: numberOr(s.batteryBusbarMinimum, fallback.services.batteryBusbar.minimumBatteries), price: numberOr(s.batteryBusbarPrice, fallback.services.batteryBusbar.price) },
     },
   };
   renderPriceList();
