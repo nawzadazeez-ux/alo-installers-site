@@ -4,6 +4,21 @@
 /admin.js
   Cache-Control: no-store, no-cache, must-revalidate
 
+/installers.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/installers.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/installers.css
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/installers-extra.css
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/installers-forgot.css
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
   Service-Worker-Allowed: /
