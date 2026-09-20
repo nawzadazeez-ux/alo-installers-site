@@ -40,32 +40,32 @@ const INSTALLER_PRICE_LIST=[
  ['inverter','Bryyze Hybrid Inverter 6.2kW','48V DC - IP54 - Single Phase - 2 Years Warranty',325],
  ['battery','Viva Lithium Battery 314Ah','LiFePO4 - 6000+ Cycles - 5 Years Warranty',1600],
  ['battery','EVE Lithium Battery 314Ah','LiFePO4 - 6000+ Cycles - 5 Years Warranty',1620],
- ['service','BlueVoltio Circuit BVDC63A 20A','32-20A - 500V - One Year Warranty',5.4],
- ['service','BlueVoltio Circuit BVDC63A 32A','32-32A - 500V - One Year Warranty',5.5],
- ['service','BlueVoltio DC Fuse Holder','DC Fuse Holder - One Year Warranty',2],
- ['service','BlueVoltio DC Fuse Link','32A / 20A / 16A - One Year Warranty',1],
- ['service','BlueVoltio DC SPD BVN40','1000V - One Year Warranty',11],
- ['service','BlueVoltio Mini AC 2-Pole','BV63 63A / 32A - One Year Warranty',3.2],
- ['service','BlueVoltio Mini AC 3-Phase','BV63 3-Pole 63A / 32A - One Year Warranty',5.5],
- ['service','BlueVoltio Contactor BVCT','22/63 NO, N - One Year Warranty',9.5],
- ['service','BlueVoltio Board BVHT 12-Way','Distribution board',5.5],
- ['service','BlueVoltio Board BVHT 18-Way','Distribution board',9],
- ['service','BlueVoltio Board BVDB 18-Way','Distribution board',19],
- ['service','BlueVoltio Board BVDB 12-Way','Distribution board',13],
- ['service','BlueVoltio Board BVDB 18-Way Premium','Distribution board',25],
- ['service','BlueVoltio MC4 Connector','30A - 1000V',0.5],
- ['service','BlueVoltio Smart WiFi Meter','63A Smart Circuit - One Year Warranty',20],
- ['service','BlueVoltio Voltage & Current Protector','63A - One Year Warranty',5.5],
- ['service','BlueVoltio 3-Phase V & C Protector','Three Phase - One Year Warranty',26],
- ['service','BlueVoltio Fire Extinguisher BVS32-1EL','One Year Warranty',5.8],
- ['service','Galvanized Steel DKSN China','2mm - 5.9m',13.75],
- ['service','Galvanized Steel DKSN Iraq','2mm - 6m',13.25],
- ['service','Clamp','Made in China',0.5],
- ['service','End Clamp','Made in China',0.5],
- ['service','Base Lakesha','Made in China',1.95],
- ['service','Triangle 3mm','Made in China',0.85],
- ['service','Join 2mm','Made in China',0.95],
- ['service','DC Cable','Turkey - 500m roll; price per meter',0.95]
+ ['electrical','BlueVoltio Circuit BVDC63A 20A','32-20A - 500V - One Year Warranty',5.4],
+ ['electrical','BlueVoltio Circuit BVDC63A 32A','32-32A - 500V - One Year Warranty',5.5],
+ ['electrical','BlueVoltio DC Fuse Holder','DC Fuse Holder - One Year Warranty',2],
+ ['electrical','BlueVoltio DC Fuse Link','32A / 20A / 16A - One Year Warranty',1],
+ ['electrical','BlueVoltio DC SPD BVN40','1000V - One Year Warranty',11],
+ ['electrical','BlueVoltio Mini AC 2-Pole','BV63 63A / 32A - One Year Warranty',3.2],
+ ['electrical','BlueVoltio Mini AC 3-Phase','BV63 3-Pole 63A / 32A - One Year Warranty',5.5],
+ ['electrical','BlueVoltio Contactor BVCT','22/63 NO, N - One Year Warranty',9.5],
+ ['electrical','BlueVoltio Board BVHT 12-Way','Distribution board',5.5],
+ ['electrical','BlueVoltio Board BVHT 18-Way','Distribution board',9],
+ ['electrical','BlueVoltio Board BVDB 18-Way','Distribution board',19],
+ ['electrical','BlueVoltio Board BVDB 12-Way','Distribution board',13],
+ ['electrical','BlueVoltio Board BVDB 18-Way Premium','Distribution board',25],
+ ['electrical','BlueVoltio MC4 Connector','30A - 1000V',0.5],
+ ['electrical','BlueVoltio Smart WiFi Meter','63A Smart Circuit - One Year Warranty',20],
+ ['electrical','BlueVoltio Voltage & Current Protector','63A - One Year Warranty',5.5],
+ ['electrical','BlueVoltio 3-Phase V & C Protector','Three Phase - One Year Warranty',26],
+ ['electrical','BlueVoltio Fire Extinguisher BVS32-1EL','One Year Warranty',5.8],
+ ['structure','Galvanized Steel DKSN China','2mm - 5.9m',13.75],
+ ['structure','Galvanized Steel DKSN Iraq','2mm - 6m',13.25],
+ ['structure','Clamp','Made in China',0.5],
+ ['structure','End Clamp','Made in China',0.5],
+ ['structure','Base Lakesha','Made in China',1.95],
+ ['structure','Triangle 3mm','Made in China',0.85],
+ ['structure','Join 2mm','Made in China',0.95],
+ ['cable','DC Cable','Turkey - 500m roll; price per meter',0.95]
 ];
 async function ensurePortalCore(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS installers (id INTEGER PRIMARY KEY AUTOINCREMENT,full_name TEXT NOT NULL,phone TEXT NOT NULL,business TEXT,city TEXT,username TEXT NOT NULL,password_hash TEXT,password_salt TEXT,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,approved_at TEXT)").run();
@@ -81,9 +81,14 @@ async function ensurePortalCore(env){
  await env.DB.prepare('CREATE TABLE IF NOT EXISTS app_migrations (key TEXT PRIMARY KEY,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)').run();
  const imported=await env.DB.prepare('SELECT key FROM app_migrations WHERE key=?').bind('installer-price-list-2026-08-09').first();
  if(!imported){
-  await env.DB.prepare('DELETE FROM installer_products').run();
-  await env.DB.batch(INSTALLER_PRICE_LIST.map((x,i)=>env.DB.prepare('INSERT INTO installer_products(type,name,spec,retail_price,trade_price,active,sort_order) VALUES(?,?,?,?,?,1,?)').bind(x[0],x[1],x[2],x[3],x[3],(i+1)*10)));
+  const productCount=await env.DB.prepare('SELECT COUNT(*) count FROM installer_products').first();
+  if(!Number(productCount?.count))await env.DB.batch(INSTALLER_PRICE_LIST.map((x,i)=>env.DB.prepare('INSERT INTO installer_products(type,name,spec,retail_price,trade_price,active,sort_order) VALUES(?,?,?,?,?,1,?)').bind(x[0],x[1],x[2],x[3],x[3],(i+1)*10)));
   await env.DB.prepare('INSERT INTO app_migrations(key) VALUES(?)').bind('installer-price-list-2026-08-09').run();
+ }
+ const categorized=await env.DB.prepare('SELECT key FROM app_migrations WHERE key=?').bind('installer-product-categories-2026-09-20').first();
+ if(!categorized){
+  await env.DB.prepare("UPDATE installer_products SET type=CASE WHEN lower(name) LIKE '%cable%' THEN 'cable' WHEN lower(name) LIKE '%galvanized steel%' OR lower(name) LIKE '%clamp%' OR lower(name) LIKE '%base lakesha%' OR lower(name) LIKE '%triangle%' OR lower(name) LIKE '%join%' THEN 'structure' ELSE 'electrical' END,updated_at=datetime('now') WHERE type='service'").run();
+  await env.DB.prepare('INSERT INTO app_migrations(key) VALUES(?)').bind('installer-product-categories-2026-09-20').run();
  }
 }
 async function ensureCalculator(env){
@@ -149,7 +154,7 @@ export async function onRequest(context){
   if(path==='/admin/products'&&method==='POST'){
    if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);
    const d=await body(request),id=Number(d?.id||0),type=clean(d?.type,30).toLowerCase(),name=clean(d?.name,120),spec=clean(d?.spec,240),retail=Number(d?.retailPrice),trade=Number(d?.tradePrice),sortOrder=Number(d?.sortOrder||0),active=d?.active?1:0;
-   if(!['panel','inverter','battery','service'].includes(type)||name.length<2||!Number.isFinite(retail)||!Number.isFinite(trade)||retail<0||trade<0||!Number.isFinite(sortOrder))return json({error:'Invalid product details.'},400);
+   if(!['panel','inverter','battery','electrical','structure','cable'].includes(type)||name.length<2||!Number.isFinite(retail)||!Number.isFinite(trade)||retail<0||trade<0||!Number.isFinite(sortOrder))return json({error:'Invalid product details.'},400);
    if(id){await env.DB.prepare("UPDATE installer_products SET type=?,name=?,spec=?,retail_price=?,trade_price=?,active=?,sort_order=?,updated_at=datetime('now') WHERE id=?").bind(type,name,spec,retail,trade,active,sortOrder,id).run();return json({ok:true,id})}
    const result=await env.DB.prepare("INSERT INTO installer_products(type,name,spec,retail_price,trade_price,active,sort_order) VALUES(?,?,?,?,?,?,?)").bind(type,name,spec,retail,trade,active,sortOrder).run();return json({ok:true,id:result.meta?.last_row_id},201)
   }
