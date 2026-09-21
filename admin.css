@@ -36,6 +36,7 @@ nav i{font-style:normal;background:var(--red);color:#fff;border-radius:99px;padd
 .approve{background:var(--green)}
 .approval-whatsapp{width:100%;margin-top:14px;background:#25d366;color:#062b17}
 .approval-whatsapp:hover{filter:brightness(1.06)}
+.installer-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.installer-tools .approval-whatsapp{margin:0}.qr-button{background:#fff;color:#092117}.qr-dialog{width:min(430px,calc(100% - 28px));padding:28px;border:1px solid var(--line);border-radius:22px;background:#0d2118;color:#fff;box-shadow:0 30px 90px #000;text-align:center}.qr-dialog::backdrop{background:rgba(0,0,0,.78);backdrop-filter:blur(5px)}.qr-close{position:absolute;top:10px;left:10px;width:38px;height:38px;padding:0;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:24px}.qr-brand{display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:18px}.qr-brand img{width:55px;height:55px;object-fit:contain}.qr-brand b,.qr-brand span{display:block;text-align:start}.qr-brand span{margin-top:4px;color:var(--gold);font-size:11px}.qr-dialog h2{margin:8px 0 18px}.qr-image{display:block;width:280px;max-width:100%;aspect-ratio:1;margin:auto;padding:12px;border-radius:16px;background:#fff}.qr-dialog p{color:var(--muted);line-height:1.7}.qr-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.qr-actions a,.qr-actions button{display:grid;place-items:center;min-height:44px;border-radius:9px;background:var(--gold);color:#132018;text-decoration:none;font-weight:800}.qr-actions button{background:var(--green)}
 .reject{background:rgba(255,129,120,.12);border:1px solid rgba(255,129,120,.35);color:var(--red)}
 .product-form{margin-bottom:20px}
 .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -56,7 +57,9 @@ main{margin-top:30px}
 .cards,.form-grid{grid-template-columns:1fr}
 .heading{display:block}
 .heading .outline{margin-bottom:18px}
+.installer-tools{grid-template-columns:1fr}
 }
+@media print{body>*{display:none!important}.qr-dialog[open]{display:block!important;position:fixed;inset:0;margin:auto;border:0;box-shadow:none;background:#fff;color:#092117}.qr-dialog .qr-close,.qr-dialog .qr-actions{display:none!important}.qr-dialog::backdrop{display:none}.qr-dialog p{color:#33473e}}
 .box{background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:20px;margin-bottom:20px}
 .box h2{margin:0 0 14px;color:#fff}
 .section-title,.toolbar,.catalog-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
