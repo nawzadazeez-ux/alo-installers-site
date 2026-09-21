@@ -1,0 +1,5 @@
+Replace these files in the existing repository root and commit. Keep all other website files. Do not upload the ZIP itself. Wait for successful Cloudflare deployment. No manual SQL migration or database reset is needed.
+Admin: Website statistics tab; Pending, Approved and Other installer tabs. Search applies to selected installer tab. Previous account management features are retained.
+Analytics starts only after deployment; no historical traffic can be reconstructed. Visitors estimate distinct browser IDs; clearing storage, multiple devices, blockers and automated traffic affect totals. Events retained for 90 days. WhatsApp counts opening/clicking, not delivered messages or sales.
+Inspection form: /inspection.html, also linked from the homepage. Only successfully stored requests count. Contact details are visible only through authenticated admin analytics; no automatic WhatsApp/SMS is sent.
+Tested locally: API/SQLite aggregation, authorization, input validation, deduplication, tracker route and click handling, privacy exclusions. Browser visual test unavailable in this environment. Not yet deployed.

@@ -89,3 +89,5 @@ main{margin-top:30px}
 
 /* Account management */
 .actions{flex-wrap:wrap;gap:10px}.actions button{min-height:44px}.delete-account{background:#57242b;color:#fff;border:1px solid #dc727b}.account-reason{padding:12px;border-inline-start:3px solid #d3af48;overflow-wrap:anywhere;background:#ffffff08}.actions button:disabled{opacity:.55;cursor:wait}@media(max-width:600px){.actions button{flex:1 1 100%;width:100%}}
+
+.installer-tabs{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}.installer-tabs button{background:#14291f;color:#e9eeee;border:1px solid #57705b}.installer-tabs button.active{background:#e7c65a;color:#08140e}.installer-tabs b{margin-inline-start:8px}.analytics-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:20px 0}.metric{background:#14291f;border:1px solid #57705b;padding:20px;border-radius:14px;display:flex;flex-direction:column;gap:10px}.metric strong{font-size:30px;color:#e7c65a}#inspectionRequests p{overflow-wrap:anywhere}@media(max-width:600px){.installer-tabs button{flex:1 1 100%}}

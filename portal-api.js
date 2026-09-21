@@ -119,12 +119,56 @@ async function throttle(env,request,scope){const ip=request.headers.get('CF-Conn
 async function clearThrottle(env,request,scope){const ip=request.headers.get('CF-Connecting-IP')||'unknown',key=await sha256(`${scope}:${ip}`);await env.DB.prepare('DELETE FROM login_attempts WHERE key=?').bind(key).run()}
 function pathOf(context){return '/'+(context.params.path||[]).join('/')}
 
+async function ensureAnalytics(env){
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS site_events (event_id TEXT PRIMARY KEY,visitor TEXT NOT NULL,session TEXT NOT NULL,type TEXT NOT NULL,page TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+ await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_site_events_date ON site_events(created_at)').run();
+ await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_site_events_visitor_date ON site_events(visitor,created_at)').run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS inspection_requests (id TEXT PRIMARY KEY,name TEXT NOT NULL,phone TEXT NOT NULL,city TEXT NOT NULL,note TEXT,page TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+}
+function analyticsPage(value){const allowed=['/','/index.html','/products.html','/installers.html','/monitor.html','/privacy.html','/terms.html','/verify-installer.html','/my-installer-card.html','/inspection.html'];const [path,section]=String(value||'').split('#');if(!allowed.includes(path))return '/';const base=path==='/index.html'?'/':path;return base+(['home','services','solutions','calculator','about','contact','products'].includes(section)?'#'+section:'')}
+async function analyticsRoute(env,request,path,method){
+ if(path==='/admin/analytics'){
+  if(method!=='GET')return json({error:'Method not allowed'},405);
+  if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);
+  await ensureAnalytics(env);
+  const days=Number(new URL(request.url).searchParams.get('days')||30);if(![1,7,30,90].includes(days))return json({error:'Invalid period'},400);
+  const since=new Date(Date.now()-days*86400000).toISOString().slice(0,19).replace('T',' ');
+  const totals=await env.DB.prepare("SELECT COUNT(DISTINCT visitor) visitors,COUNT(DISTINCT session) sessions,SUM(type='page_view') views,SUM(type='whatsapp') whatsapp,MIN(created_at) first_event FROM site_events WHERE created_at>=?").bind(since).first();
+  const {results:pages}=await env.DB.prepare("SELECT page,COUNT(DISTINCT visitor) visitors,SUM(type='page_view') views,SUM(type='whatsapp') whatsapp FROM site_events WHERE created_at>=? GROUP BY page ORDER BY views DESC").bind(since).all();
+  const {results:requests}=await env.DB.prepare('SELECT * FROM inspection_requests WHERE created_at>=? ORDER BY created_at DESC LIMIT 100').bind(since).all();
+  const {results:inspections}=await env.DB.prepare('SELECT page,COUNT(*) requests FROM inspection_requests WHERE created_at>=? GROUP BY page').bind(since).all();
+  return json({days,totals:totals||{},pages,requests,inspections});
+ }
+ if(method!=='POST')return json({error:'Method not allowed'},405);
+ if(Number(request.headers.get('content-length')||0)>4096)return json({error:'Request too large'},413);
+ const raw=await request.text();if(raw.length>4096)return json({error:'Request too large'},413);
+ let d;try{d=JSON.parse(raw)}catch{return json({error:'Invalid request'},400)}
+ if(!d||typeof d!=='object')return json({error:'Invalid request'},400);
+ const page=analyticsPage(d.page),validId=v=>typeof v==='string'&&/^[a-zA-Z0-9-]{16,64}$/.test(v);
+ if(path==='/inspection'){
+  if(!validId(d.id)||!clean(d.name,100)||!/^\+?[0-9 ()-]{8,25}$/.test(String(d.phone||''))||!clean(d.city,80))return json({error:'تکایە ناو، ژمارەی مۆبایل و شار بە دروستی بنووسە.'},400);
+  await ensureAnalytics(env);
+  if(await env.DB.prepare('SELECT id FROM inspection_requests WHERE id=?').bind(d.id).first())return json({ok:true,id:d.id});
+  if(!await throttle(env,request,'inspection'))return json({error:'تکایە کەمێک چاوەڕێ بکە و دووبارە هەوڵ بدە.'},429);
+  await env.DB.prepare('INSERT OR IGNORE INTO inspection_requests(id,name,phone,city,note,page) VALUES(?,?,?,?,?,?)').bind(d.id,clean(d.name,100),clean(d.phone,25),clean(d.city,80),clean(d.note,500),page).run();
+  return json({ok:true,id:d.id},201);
+ }
+ if(!validId(d.id)||!validId(d.visitor)||!validId(d.session)||!['page_view','whatsapp'].includes(d.type))return json({error:'Invalid event'},400);
+ await ensureAnalytics(env);
+ const count=await env.DB.prepare("SELECT COUNT(*) n FROM site_events WHERE visitor=? AND created_at>=datetime('now','-1 day')").bind(d.visitor).first();
+ if(count.n>=500)return json({error:'Rate limit'},429);
+ await env.DB.prepare('INSERT OR IGNORE INTO site_events(event_id,visitor,session,type,page) VALUES(?,?,?,?,?)').bind(d.id,d.visitor,d.session,d.type,page).run();
+ await env.DB.prepare("DELETE FROM site_events WHERE created_at<datetime('now','-90 days')").run();
+ return json({ok:true});
+}
+
 export async function onRequest(context){
  const {request,env}=context,path=pathOf(context),method=request.method;
  if(!env.DB)return json({error:'Database binding DB is missing.'},500);
  if(!sameOrigin(request)&&method!=='GET')return json({error:'Invalid origin.'},403);
  try{
   await ensurePortalCore(env);
+  if(['/events','/inspection','/admin/analytics'].includes(path))return await analyticsRoute(env,request,path,method);
   if(path==='/register'&&method==='POST'){
    const d=await body(request);if(!d)return json({error:'Invalid request.'},400);
    const fullName=clean(d.fullName),phone=clean(d.phone,30),business=clean(d.business),city=clean(d.city,60),username=clean(d.username,40).toLowerCase(),password=String(d.password||'');
