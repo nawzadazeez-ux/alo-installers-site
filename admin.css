@@ -34,6 +34,8 @@ nav i{font-style:normal;background:var(--red);color:#fff;border-radius:99px;padd
 .reset-password-button:disabled{opacity:.65;cursor:wait}
 .row-actions{margin:0}
 .approve{background:var(--green)}
+.approval-whatsapp{width:100%;margin-top:14px;background:#25d366;color:#062b17}
+.approval-whatsapp:hover{filter:brightness(1.06)}
 .reject{background:rgba(255,129,120,.12);border:1px solid rgba(255,129,120,.35);color:var(--red)}
 .product-form{margin-bottom:20px}
 .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
