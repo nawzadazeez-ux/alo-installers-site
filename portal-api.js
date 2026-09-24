@@ -169,6 +169,7 @@ export async function onRequest(context){
  try{
   await ensurePortalCore(env);
   if(['/events','/inspection','/admin/analytics'].includes(path))return await analyticsRoute(env,request,path,method);
+  if(path==='/announcements'||path==='/admin/announcements')return await announcementsRoute(env,request,path,method);
   if(path==='/register'&&method==='POST'){
    const d=await body(request);if(!d)return json({error:'Invalid request.'},400);
    const fullName=clean(d.fullName||d.username),phone=clean(d.phone,30),business=clean(d.business),city=clean(d.city,60),username=clean(d.username,40).toLowerCase(),password=String(d.password||'');
@@ -256,4 +257,21 @@ export async function onRequest(context){
   if(path==='/admin/calculator/settings'&&method==='POST'){if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);await ensureCalculator(env);const d=await body(request);if(!d||typeof d.settings!=='object')return json({error:'Invalid settings.'},400);const allowed=Object.keys(SERVICE_SEED),entries=Object.entries(d.settings).filter(([k,v])=>allowed.includes(k)&&Number.isFinite(Number(v))&&Number(v)>=0);if(entries.length!==allowed.length)return json({error:'Complete all service prices.'},400);await env.DB.batch(entries.map(([k,v])=>env.DB.prepare("INSERT INTO calculator_settings(key,value,updated_at) VALUES(?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=datetime('now')").bind(k,Number(v))));return json({ok:true})}
   return json({error:'Not found.'},404);
  }catch(e){console.error(e);return json({error:'Server error. Please try again.'},500)}
+}
+
+async function announcementsRoute(env,request,path,method){
+ const admin=path==='/admin/announcements';
+ const user=await sessionUser(env,request,admin?'admin':'installer');
+ if(!user||(!admin&&user.status!=='approved'))return json({error:'Unauthorized'},401);
+ if((!admin&&method!=='GET')||(admin&&!['GET','POST'].includes(method)))return json({error:'Method not allowed'},405);
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS installer_announcements (id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,message TEXT NOT NULL,kind TEXT NOT NULL DEFAULT 'general',active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+ if(method==='GET'){const {results}=await env.DB.prepare(admin?'SELECT * FROM installer_announcements ORDER BY id DESC LIMIT 200':'SELECT id,title,message,kind,created_at,updated_at FROM installer_announcements WHERE active=1 ORDER BY id DESC LIMIT 50').all();return json({announcements:results})}
+ const d=await body(request);if(!d)return json({error:'Invalid request'},400);
+ const title=String(d.title||'').trim(),message=String(d.message||'').trim(),kind=String(d.kind||'general');
+ if(!title||title.length>120||!message||message.length>2000||!['general','price','product','offer'].includes(kind)||typeof d.active!=='boolean')return json({error:'ناونیشان و دەقی نامەکە بە دروستی پڕ بکەرەوە.'},400);
+ const id=d.id==null?null:Number(d.id);
+ if(id!==null&&(!Number.isSafeInteger(id)||id<=0))return json({error:'Invalid ID'},400);
+ if(id!==null){const exists=await env.DB.prepare('SELECT id FROM installer_announcements WHERE id=?').bind(id).first();if(!exists)return json({error:'Not found'},404);await env.DB.prepare('UPDATE installer_announcements SET title=?,message=?,kind=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title,message,kind,d.active?1:0,id).run()}
+ else await env.DB.prepare('INSERT INTO installer_announcements(title,message,kind,active) VALUES(?,?,?,?)').bind(title,message,kind,d.active?1:0).run();
+ return json({ok:true});
 }
