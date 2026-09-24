@@ -171,16 +171,17 @@ export async function onRequest(context){
   if(['/events','/inspection','/admin/analytics'].includes(path))return await analyticsRoute(env,request,path,method);
   if(path==='/register'&&method==='POST'){
    const d=await body(request);if(!d)return json({error:'Invalid request.'},400);
-   const fullName=clean(d.fullName),phone=clean(d.phone,30),business=clean(d.business),city=clean(d.city,60),username=clean(d.username,40).toLowerCase(),password=String(d.password||'');
+   const fullName=clean(d.fullName||d.username),phone=clean(d.phone,30),business=clean(d.business),city=clean(d.city,60),username=clean(d.username,40).toLowerCase(),password=String(d.password||'');
    if(fullName.length<3||phone.length<7||username.length<4||!/^[a-z0-9._-]+$/.test(username)||password.length<8)return json({error:'Please complete all required fields correctly.'},400);
    const exists=await env.DB.prepare('SELECT id FROM installers WHERE username=? OR phone=?').bind(username,phone).first();if(exists)return json({error:'Username or phone already exists.'},409);
    const p=await passwordHash(password);await env.DB.prepare("INSERT INTO installers(full_name,phone,business,city,username,password_hash,password_salt,status) VALUES(?,?,?,?,?,?,?,'pending')").bind(fullName,phone,business,city,username,p.hash,p.salt).run();
    return json({ok:true,status:'pending'},201);
   }
-  if(path==='/login'&&method==='POST'){
+  if((path==='/login'||path==='/application-status')&&method==='POST'){
    if(!await throttle(env,request,'installer'))return json({error:'Too many attempts. Try again later.'},429);
    const d=await body(request),username=clean(d?.username,40).toLowerCase(),password=String(d?.password||'');const u=await env.DB.prepare('SELECT * FROM installers WHERE username=?').bind(username).first();
    if(!u||!await passwordOK(password,u.password_salt,u.password_hash))return json({error:'Incorrect username or password.'},401);
+   if(path==='/application-status'){await clearThrottle(env,request,'installer');return json({status:['pending','approved','rejected'].includes(u.status)?u.status:'disabled'});}
    if(u.status!=='approved')return json({error:u.status==='pending'?'Your application is awaiting approval.':'Your account is not active.',status:u.status},403);
    await clearThrottle(env,request,'installer');const token=await issueSession(env,'installer',u.id);return json({ok:true,name:u.full_name},200,{'set-cookie':setCookie('alo_installer_session',token,604800)});
   }
