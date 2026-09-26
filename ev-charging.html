@@ -3,7 +3,37 @@
 @media(max-width:800px){.brand span{display:none}.hero{min-height:92vh;background:linear-gradient(#050706bb,#050706ee),url('https://www.sfxntech.com/images/sunfull/products/ev_smart_charger/SMART-7kw-OCPP16-4G-WiFi-Wallbox-03-clean.webp?v=1') center 20%/cover no-repeat}.hero h1{letter-spacing:-2px}.head{display:block}.solutions,.brands,.solar{grid-template-columns:1fr}.brand-card img{height:300px}.solar-img{min-height:320px}.solar-copy{padding:30px}.section{padding:65px 0}.fields{grid-template-columns:1fr}.lang{padding:7px 5px;font-size:12px}.back{padding:8px 10px;font-size:12px}}
 </style><style id="eve-featured-image-fix">
 .ev-product>img{display:block;max-width:100%;object-fit:contain;background:#f5f6f2}
-</style></head><body data-layout="ev">
+</style>
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+<style id="ev-topbar-stability-fix">
+body[data-layout=ev]{overflow-x:hidden}
+body[data-layout=ev] header .nav{min-height:72px;height:auto;padding:10px 0;flex-wrap:wrap;row-gap:10px}
+body[data-layout=ev] header .brand{flex:1 1 260px;min-width:0}
+body[data-layout=ev] header .brand img{flex:0 0 auto}
+body[data-layout=ev] header .brand span{display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body[data-layout=ev] header .nav-right{margin-inline-start:auto;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;min-width:0}
+body[data-layout=ev] header .nav-right .back{white-space:nowrap}
+body[data-layout=ev] .hero,body[data-layout=ev] main{overflow-x:clip}
+@media(max-width:1100px){
+  body[data-layout=ev] header .wrap,body[data-layout=ev] .hero>.wrap,body[data-layout=ev] .ev-quick-nav{width:min(100%,calc(100% - 32px))}
+  body[data-layout=ev] header .brand{flex-basis:220px}
+}
+@media(max-width:760px){
+  body[data-layout=ev] header .nav{align-items:flex-start}
+  body[data-layout=ev] header .brand{flex:1 1 100%}
+  body[data-layout=ev] header .nav-right{width:100%;margin-inline-start:0;justify-content:space-between}
+  body[data-layout=ev] header .nav-right .lang{flex:0 0 auto}
+  body[data-layout=ev] header .nav-right .back{margin-inline-start:auto}
+}
+@media(max-width:520px){
+  body[data-layout=ev] header .nav-right{gap:6px}
+  body[data-layout=ev] header .nav-right .back{font-size:11px;padding:8px 9px}
+  body[data-layout=ev] header .brand img{width:48px;height:48px}
+}
+</style>
+</head><body data-layout="ev">
 <header><div class="wrap nav"><a class="brand" href="ev-charging.html"><img src="./alo-logo.png?v=3" alt="Alo Solar Energy Logo"><span>ALO EV CHARGE</span></a><div class="nav-right"><button class="lang" data-lang="en">EN</button><button class="lang" data-lang="ku">کوردی</button><button class="lang" data-lang="ar">عربي</button><a class="back" href="index.html"><span class="en">⌂ Alo Solar</span><span class="ku">⌂ سەرەتا</span><span class="ar">⌂ الرئيسية</span></a></div></div></header>
 <main><section class="hero"><div class="wrap ev-hero-grid"><div class="hero-copy"><div class="kicker">ALO SOLAR ENERGY · EV DIVISION</div><h1 dir="ltr">ALO <span>EV</span><br>CHARGE</h1><p><span class="en">EV charging for your home and business. Explore Power Solid, Medal Power and Three Watt chargers, with installation support from Alo Solar Energy.</span><span class="ku">شەحنکەری ئۆتۆمبێل بۆ ماڵ و کاروبارەکەت؛ بەرهەمەکانی Power Solid، Medal Power و Three Watt هەڵبژێرە، لەگەڵ خزمەتگوزاری دامەزراندنی Alo Solar Energy.</span><span class="ar">شحن السيارات الكهربائية لمنزلك وأعمالك. اكتشف شواحن Power Solid وMedal Power وThree Watt، مع خدمة التركيب من Alo Solar Energy.</span></p><div class="actions"><button class="btn primary" onclick="openCalc()"><span class="en">Calculate charging time</span><span class="ku">حیسابکردنی کاتی شەحن</span><span class="ar">احسب وقت الشحن</span></button><a class="btn" href="#chargers"><span class="en">Explore Chargers</span><span class="ku">شەحنکەرەکان ببینە</span><span class="ar">استكشف الشواحن</span></a><button class="btn" onclick="openFinder()"><span class="en">Find My Charger</span><span class="ku">شەحنکەری من بدۆزەوە</span><span class="ar">اختر شاحني</span></button></div></div><div class="ev-hero-media"><img src="https://www.sfxntech.com/images/sunfull/products/ev_smart_charger/SMART-7kw-OCPP16-4G-WiFi-Wallbox-03-clean.webp?v=1" alt="EV charging stations beside a solar canopy" fetchpriority="high" decoding="async"></div></div></section>
 <nav class="ev-quick-nav wrap" aria-label="EV sections"><a href="ev-support.html"><span class="en">Charging cost & support</span><span class="ku">تێچووی شەحن و خزمەتگوزاری</span><span class="ar">تكلفة الشحن والدعم</span></a><a href="#chargers"><span class="en">Chargers</span><span class="ku">شەحنکەرەکان</span><span class="ar">الشواحن</span></a><a href="#ev-solutions"><span class="en">Solutions</span><span class="ku">چارەسەرەکان</span><span class="ar">الحلول</span></a><a href="#ev-solar"><span class="en">Solar + EV</span><span class="ku">وزەی خۆر + EV</span><span class="ar">الطاقة الشمسية + EV</span></a><button type="button" onclick="openCalc()"><span class="en">Charging calculator</span><span class="ku">حیسابکەری شەحن</span><span class="ar">حاسبة الشحن</span></button></nav><section class="section" id="ev-solutions"><div class="wrap"><div class="head"><div><div class="kicker">ONE PLATFORM · THREE NEEDS</div><h2><span class="en">Charging that fits your place.</span><span class="ku">شەحن بەپێی شوێنەکەت.</span><span class="ar">شحن يناسب موقعك.</span></h2></div><p><span class="en">From overnight home charging to commercial and public fast charging, we help select the right category before final site assessment.</span><span class="ku">لە شەحنی شەوانەی ماڵەوە تا شەحنی خێرای بازرگانی و گشتی، یارمەتیت دەدەین جۆری گونجاو هەڵبژێریت.</span><span class="ar">من الشحن المنزلي الليلي إلى الشحن التجاري والعام السريع، نساعدك في اختيار الفئة المناسبة.</span></p></div><div class="solutions"><article class="solution"><div class="icon">⌂</div><div class="copy"><h3><span class="en">Home</span><span class="ku">ماڵ</span><span class="ar">المنزل</span></h3><p><span class="en">Simple AC charging for villas and homes.</span><span class="ku">شەحنی AC ـی سادە بۆ ماڵ و ڤێلا.</span><span class="ar">شحن AC بسيط للمنازل والفلل.</span></p></div></article><article class="solution"><div class="icon">▦</div><div class="copy"><h3><span class="en">Business</span><span class="ku">کاروبار</span><span class="ar">الأعمال</span></h3><p><span class="en">Charging for offices, hotels, malls and parking.</span><span class="ku">شەحن بۆ ئۆفیس، هوتێل، مۆڵ و پارکینگ.</span><span class="ar">شحن للمكاتب والفنادق والمولات والمواقف.</span></p></div></article><article class="solution"><div class="icon">⚡</div><div class="copy"><h3><span class="en">Fast charging</span><span class="ku">شەحنی خێرا</span><span class="ar">الشحن السريع</span></h3><p><span class="en">DC solutions for higher-power public and commercial sites.</span><span class="ku">چارەسەری DC بۆ شوێنی گشتی و بازرگانی.</span><span class="ar">حلول DC للمواقع العامة والتجارية.</span></p></div></article></div></div></section>
