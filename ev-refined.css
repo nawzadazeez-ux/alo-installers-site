@@ -137,3 +137,8 @@ body[data-layout=ev] .ev-hero-media img{display:block;width:100%;height:auto;max
 body[data-layout=ev] .ev-quick-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:10px;margin-top:0}
 body[data-layout=ev] .ev-quick-nav>*{min-width:0;text-align:center;line-height:1.7}
 @media(max-width:760px){body[data-layout=ev] header .wrap,body[data-layout=ev] .hero>.wrap,body[data-layout=ev] .ev-quick-nav{width:calc(100% - 32px)}body[data-layout=ev] .hero{padding:96px 0 24px}body[data-layout=ev] .hero>.ev-hero-grid{grid-template-columns:1fr;gap:24px}body[data-layout=ev] .hero-copy{padding:0}body[data-layout=ev] .hero h1{font-size:clamp(48px,12vw,64px);margin:12px 0 18px}body[data-layout=ev] .hero p{font-size:15px;line-height:1.95}body[data-layout=ev] .hero .actions{margin-top:22px;gap:10px}body[data-layout=ev] .hero .actions>.btn{font-size:13px}body[data-layout=ev] .ev-hero-media{border-radius:18px}body[data-layout=ev] .ev-hero-media img{max-height:none}body[data-layout=ev] .ev-quick-nav{grid-template-columns:1fr 1fr}body[data-layout=ev] .ev-quick-nav>a:first-child{grid-column:1/-1}}
+
+/* EV product media deployment fix v11 */
+.ev-product>img{display:block;max-width:100%;aspect-ratio:1/1;min-height:0!important;height:auto!important;align-self:stretch;object-fit:contain!important;background:#f5f6f2!important;padding:18px!important}
+@media(min-width:761px){.ev-product>img{height:100%!important;aspect-ratio:auto}}
+@media(max-width:760px){.ev-product>img{height:100%!important;aspect-ratio:auto;padding:10px!important}}
