@@ -67,6 +67,9 @@ const INSTALLER_PRICE_LIST=[
  ['structure','Join 2mm','Made in China',0.95],
  ['cable','DC Cable','Turkey - 500m roll; price per meter',0.95]
 ];
+async function ensureEvCatalog(env){
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS ev_products (id INTEGER PRIMARY KEY AUTOINCREMENT,brand TEXT NOT NULL,name TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'AC',power_kw REAL NOT NULL DEFAULT 0,phase TEXT,spec TEXT,warranty TEXT,price REAL NOT NULL DEFAULT 0,show_price INTEGER NOT NULL DEFAULT 0,active INTEGER NOT NULL DEFAULT 1,sort_order INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+}
 async function ensurePortalCore(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS installers (id INTEGER PRIMARY KEY AUTOINCREMENT,full_name TEXT NOT NULL,phone TEXT NOT NULL,business TEXT,city TEXT,username TEXT NOT NULL,password_hash TEXT,password_salt TEXT,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,approved_at TEXT)").run();
  const {results:columns}=await env.DB.prepare('PRAGMA table_info(installers)').all();
@@ -168,8 +171,10 @@ export async function onRequest(context){
  if(!sameOrigin(request)&&method!=='GET')return json({error:'Invalid origin.'},403);
  try{
   await ensurePortalCore(env);
+  await ensureEvCatalog(env);
   if(['/events','/inspection','/admin/analytics'].includes(path))return await analyticsRoute(env,request,path,method);
   if(path==='/announcements'||path==='/admin/announcements')return await announcementsRoute(env,request,path,method);
+  if(path==='/ev/products'&&method==='GET'){const {results}=await env.DB.prepare('SELECT id,brand,name,type,power_kw,phase,spec,warranty,price,show_price FROM ev_products WHERE active=1 ORDER BY sort_order,id').all();return json({products:results},200,{'cache-control':'no-store'});}
   if(path==='/register'&&method==='POST'){
    const d=await body(request);if(!d)return json({error:'Invalid request.'},400);
    const fullName=clean(d.fullName||d.username),phone=clean(d.phone,30),business=clean(d.business),city=clean(d.city,60),username=clean(d.username,40).toLowerCase(),password=String(d.password||'');
@@ -244,6 +249,9 @@ export async function onRequest(context){
    const result=await env.DB.prepare("INSERT INTO installer_products(type,name,spec,retail_price,trade_price,active,sort_order) VALUES(?,?,?,?,?,?,?)").bind(type,name,spec,retail,trade,active,sortOrder).run();return json({ok:true,id:result.meta?.last_row_id},201)
   }
   if(path==='/admin/products'&&method==='DELETE'){if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);const d=await body(request),id=Number(d?.id);if(!id)return json({error:'Invalid product.'},400);await env.DB.prepare('DELETE FROM installer_products WHERE id=?').bind(id).run();return json({ok:true})}
+  if(path==='/admin/ev/products'&&method==='GET'){if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);const {results}=await env.DB.prepare('SELECT * FROM ev_products ORDER BY sort_order,id').all();return json({products:results})}
+  if(path==='/admin/ev/products'&&method==='POST'){if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);const d=await body(request),id=Number(d?.id||0),brand=clean(d?.brand,40),name=clean(d?.name,100),type=clean(d?.type,10),power=Number(d?.powerKw||0),phase=clean(d?.phase,30),spec=clean(d?.spec,240),warranty=clean(d?.warranty,80),price=Math.max(0,Number(d?.price||0)),sort=Math.trunc(Number(d?.sortOrder||0)),show=d?.showPrice?1:0,active=d?.active===false?0:1;if(!brand||!name||!['AC','DC'].includes(type)||!Number.isFinite(power)||power<=0)return json({error:'Invalid EV charger data.'},400);if(id)await env.DB.prepare("UPDATE ev_products SET brand=?,name=?,type=?,power_kw=?,phase=?,spec=?,warranty=?,price=?,show_price=?,active=?,sort_order=?,updated_at=datetime('now') WHERE id=?").bind(brand,name,type,power,phase,spec,warranty,price,show,active,sort,id).run();else await env.DB.prepare("INSERT INTO ev_products(brand,name,type,power_kw,phase,spec,warranty,price,show_price,active,sort_order) VALUES(?,?,?,?,?,?,?,?,?,?,?)").bind(brand,name,type,power,phase,spec,warranty,price,show,active,sort).run();return json({ok:true})}
+  if(path==='/admin/ev/products'&&method==='DELETE'){if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);const d=await body(request),id=Number(d?.id);if(!id)return json({error:'Invalid item.'},400);await env.DB.prepare('DELETE FROM ev_products WHERE id=?').bind(id).run();return json({ok:true})}
   if(path==='/admin/calculator'&&method==='GET'){if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);await ensureCalculator(env);const {results:items}=await env.DB.prepare('SELECT * FROM calculator_items ORDER BY sort_order,id').all();const {results:rows}=await env.DB.prepare('SELECT key,value FROM calculator_settings').all();return json({items,settings:Object.fromEntries(rows.map(x=>[x.key,Number(x.value)]))})}
   if(path==='/admin/calculator/item'&&method==='POST'){
    if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);await ensureCalculator(env);const d=await body(request),id=Number(d?.id||0),current=id?await env.DB.prepare('SELECT * FROM calculator_items WHERE id=?').bind(id).first():null;

@@ -1,0 +1,12 @@
+(()=>{
+const $=id=>document.getElementById(id),copy=(a,b,c)=>document.documentElement.lang==='ku'?b:document.documentElement.lang==='ar'?c:a;
+function bill(kwh,days){let remaining=kwh,total=0;for(const rate of [72,108,175,265]){let quantity=Math.min(remaining,400*days/30);total+=quantity*rate;remaining-=quantity}return total+remaining*350}
+function state(){const home=$('tariff').value==='home',custom=$('tariff').value==='custom';for(const id of ['base','days']){$(id).disabled=!home;$(id).parentElement.hidden=!home}$('rate').disabled=!custom;$('rate').parentElement.hidden=!custom;$('cost-output').textContent=''}
+$('tariff').addEventListener('change',state);state();
+$('cost-form').addEventListener('input',()=>$('cost-output').textContent='');
+$('cost-form').addEventListener('submit',event=>{event.preventDefault();if(!$('cost-form').reportValidity())return;const num=id=>Number($(id).value),start=num('from'),end=num('to');if(end<=start){$('cost-output').textContent=copy('Target charge must exceed current charge.','شەحنی مەبەست دەبێت لە ئێستا زیاتر بێت.','الشحن المطلوب يجب أن يتجاوز الحالي.');return}const battery=num('capacity')*(end-start)/100,grid=battery/(num('eff')/100),totalEnergy=grid*num('sessions'),tariff=$('tariff').value;const cost=tariff==='home'?bill(num('base')+totalEnergy,num('days'))-bill(num('base'),num('days')):totalEnergy*(tariff==='business'?185:num('rate'));const money=new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(cost);$('cost-output').textContent=copy('Energy from grid per session: ','وزەی وەرگیراو لە تۆڕ بۆ هەر شەحن: ','طاقة الشبكة لكل جلسة: ')+grid.toFixed(2)+' kWh\n'+copy('Total charging energy in cycle: ','کۆی وزەی شەحن لە ماوەکەدا: ','إجمالي طاقة الشحن خلال الدورة: ')+totalEnergy.toFixed(2)+' kWh\n'+copy('Added energy cost in this cycle: ','تێچووی زیادەی وزە لەم ماوەیەدا: ','تكلفة الطاقة الإضافية خلال الدورة: ')+money+' IQD';});
+$('support-form').addEventListener('submit',event=>{event.preventDefault();if(!$('support-form').reportValidity())return;const message=['Alo Solar Energy — EV support',...['customer','phone','model','vehicle','issue'].map(id=>id+': '+$('support-'+id).value.trim()),'I will attach photos in WhatsApp.'].join('\n');window.open('https://wa.me/9647764400440?text='+encodeURIComponent(message),'_blank','noopener,noreferrer');});
+// Prevent stale result language after a language switch.
+const original=window.setLang;window.setLang=function(l){original(l);$('cost-output').textContent=''};
+if(typeof module!=='undefined')module.exports={bill};
+})();

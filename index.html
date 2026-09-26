@@ -312,8 +312,9 @@ html:not([lang="en"]) .lang-en,html:not([lang="ku"]) .lang-ku,html:not([lang="ar
 <link rel="stylesheet" href="premium-theme.css?v=20260916-2">
 <link rel="stylesheet" href="ai-chatgpt.css?v=1">
 <link rel="stylesheet" href="mobile-responsive.css?v=20260920-1">
+<link rel="stylesheet" href="header-fix.css?v=20260926-1">
 <script src="/site-analytics.js?v=1" defer></script></head>
-<body>
+<body data-layout="home">
 <div id="contactHub" class="contact-hub">
  <div class="hub-options">
   <button id="hubAi" class="hub-option" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3a4 4 0 0 0 4 4h1l2 3 2-3h1a4 4 0 0 0 4-4v-3a7 7 0 0 0-7-7Z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/></svg><span class="lang-en">AI Assistant</span><span class="lang-ku">یاریدەدەری AI</span><span class="lang-ar">مساعد AI</span></button>
@@ -370,6 +371,7 @@ html:not([lang="en"]) .lang-en,html:not([lang="ku"]) .lang-ku,html:not([lang="ar
       <a href="#solutions"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M9 14v3h6v-3M10 21h4M12 1v2M4.9 3.9l1.4 1.4M19.1 3.9l-1.4 1.4M3 10H1M23 10h-2"/></svg><span data-i18n="navSolutions">چارەسەرەکان</span></a>
       <a href="products.html"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v13H4zM8 7V4h8v3M8 12h8M8 16h5"/></svg><span data-i18n="navProducts">بەرهەمەکان</span></a>
       <a href="installers.html"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5zM12 14v3"/></svg><span class="lang-en">Installers</span><span class="lang-ku">بەشی وەستاکان</span><span class="lang-ar">بوابة الفنيين</span></a>
+      <a href="ev-charging.html"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10v11H7zM9 5h6M17 7h2l2 3v6a2 2 0 0 1-4 0v-2M10 13v5M14 13v5M8 18h8"/></svg><span class="lang-en">EV Charging</span><span class="lang-ku">شەحنی ئۆتۆمبێل</span><span class="lang-ar">شحن السيارات</span></a>
       <a href="#calculator"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8v4H8zM8 14h1M12 14h1M16 14h1M8 18h1M12 18h1M16 18h1"/></svg><span data-i18n="navCalculator">Solar Calculator</span></a>
       <a href="#about"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v5c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6l-8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><span data-i18n="navWhy">بۆچی ئێمە؟</span></a>
       <a href="monitor.html" class="monitor-nav"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 14l3-3 2 2 4-5 2 2M9 22h6M12 18v4"/></svg><span class="lang-en">Live Monitor</span><span class="lang-ku">مۆنیتەری ڕاستەوخۆ</span><span class="lang-ar">المراقبة المباشرة</span></a>
@@ -1315,5 +1317,5 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <script src="/pwa-register.js" defer></script>
-</body>
+<link rel="stylesheet" href="layout-refined.css?v=1"></body>
 </html>

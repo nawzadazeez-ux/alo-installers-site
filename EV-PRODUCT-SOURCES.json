@@ -1,0 +1,56 @@
+[
+  {
+    "brand": "Power Solid",
+    "title": "AC EV Charger",
+    "power": "22 kW",
+    "model": "PSACC22KW3PHGBTB",
+    "source": "https://powersolid.vn/product/power-solid-ac-ev-charger-22kw/",
+    "image": "https://powersolid.vn/wp-content/uploads/2026/06/PSACC22KW3PHGBTB-300x300.jpg",
+    "type": "AC"
+  },
+  {
+    "brand": "Power Solid",
+    "title": "DC Fast Charging Station",
+    "power": "120 kW",
+    "model": "PSDCC120KW2PGBC2KR",
+    "source": "https://powersolid.vn/product/power-solid-dc-fast-charging-station-120kw/",
+    "image": "https://powersolid.vn/wp-content/uploads/2024/07/80-100-120-140-600x600.jpeg",
+    "type": "DC"
+  },
+  {
+    "brand": "Medal Power",
+    "title": "AC EV Charger",
+    "power": "22 kW",
+    "model": "MPACC22KW3PHT2T",
+    "source": "https://medal-power.com/en/products/ev-charger/426",
+    "image": "https://medal-power.com/media/k2/items/cache/2d535442c2c0b0669d8f5a051ed00bcc_L.jpg",
+    "type": "AC"
+  },
+  {
+    "brand": "Medal Power",
+    "title": "DC Fast Charger",
+    "power": "40 kW",
+    "model": "MPDCC40KWGBTB",
+    "source": "https://medal-power.com/en/products/ev-charger/432",
+    "image": "https://medal-power.com/media/k2/items/cache/8376aace7af18ea8cafa499d7e69a6ec_L.jpg",
+    "type": "DC"
+  },
+  {
+    "brand": "Three Watt",
+    "title": "GB/T Charger",
+    "power": "7 kW",
+    "model": "WT-7KW#GBTV",
+    "source": "https://threewatt.co/product/three-watt-charger-gb-t-7kw/",
+    "image": "",
+    "type": "AC · GB/T"
+  },
+  {
+    "brand": "Three Watt",
+    "title": "Tesla Charger",
+    "power": "7 kW",
+    "model": "WT-7KW#TESV",
+    "source": "https://threewatt.co/product/three-watt-tesla-charger-7kw/",
+    "image": "",
+    "type": "AC · Tesla"
+  }
+]

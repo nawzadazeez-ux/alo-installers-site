@@ -1,0 +1,139 @@
+/* EV-only refinement: preserve brand palette, imagery and calculator formulas. */
+body[data-layout=ev]{background:#07110d;line-height:1.75}
+body[data-layout=ev] .wrap{width:min(1180px,calc(100% - 48px))}
+body[data-layout=ev] header{background:#07110df5}
+body[data-layout=ev] .nav{min-height:80px;height:auto;padding-block:10px}
+body[data-layout=ev] .brand{letter-spacing:.035em;font-size:15px}
+body[data-layout=ev] .brand img{width:58px;height:58px}
+body[data-layout=ev] .nav-right{gap:6px}
+body[data-layout=ev] .lang{min-height:42px;min-width:42px;border-radius:9px}
+body[data-layout=ev] .lang.active{background:#e7c65a18}
+body[data-layout=ev] .hero{min-height:100vh;height:auto;padding:0;background-size:auto,contain;background-position:center,right center}
+body[data-layout=ev] .hero-copy{max-width:690px;padding-top:60px}
+body[data-layout=ev] .hero h1{font-size:clamp(52px,7.5vw,92px);line-height:1.04;letter-spacing:-3px;margin:22px 0}
+body[data-layout=ev] .hero p{font-size:17px;line-height:1.9;max-width:520px}
+body[data-layout=ev] .kicker{font-size:11px;letter-spacing:1.7px;color:#e7c65a;line-height:1.8}
+body[data-layout=ev] .btn{min-height:48px;border-radius:12px;padding:12px 19px;font-size:14px;line-height:1.65;text-align:center;cursor:pointer}
+body[data-layout=ev] .actions{gap:12px;margin-top:26px}
+body[data-layout=ev] .ev-quick-nav{display:flex;gap:8px;padding:12px;border:1px solid #e7c65a2b;border-radius:16px;background:#102119;position:relative;z-index:3;margin-top:-24px}
+body[data-layout=ev] .ev-quick-nav>*{flex:1;display:flex;align-items:center;justify-content:center;min-height:45px;padding:10px;background:transparent;color:#cbd9d0;border:0;border-radius:10px;font:inherit;font-size:13px;text-align:center;cursor:pointer}
+body[data-layout=ev] .ev-quick-nav>*:hover{background:#e7c65a14;color:#f5d875}
+body[data-layout=ev] .section{padding:76px 0;scroll-margin-top:95px}
+body[data-layout=ev] .head{align-items:start;gap:36px;margin-bottom:28px}
+body[data-layout=ev] .head>div{flex:1;min-width:0}
+body[data-layout=ev] .head h2{font-size:clamp(28px,3.7vw,43px);line-height:1.4;margin:9px 0;letter-spacing:-.6px}
+body[data-layout=ev] .head>p{flex:1;max-width:460px;font-size:15px;line-height:1.9;margin-top:22px}
+body[data-layout=ev] .solutions{gap:20px}
+body[data-layout=ev] .solution{min-height:325px;border-radius:20px;box-shadow:0 15px 40px #0002}
+body[data-layout=ev] .solution:before{background:linear-gradient(180deg,#0000 10%,#07110d40 40%,#07110df5 100%)}
+body[data-layout=ev] .solution .copy{left:23px;right:23px;bottom:23px}
+body[data-layout=ev] .solution h3{font-size:24px;line-height:1.5}
+body[data-layout=ev] .solution p{font-size:14px;line-height:1.85;color:#d2ddd5}
+body[data-layout=ev] .brands{gap:24px;align-items:stretch}
+body[data-layout=ev] .brand-card{border-radius:22px;overflow:hidden;display:flex;flex-direction:column;border-color:#ffffff16;background:#102119}
+body[data-layout=ev] .brand-card>img{width:100%;height:300px;object-fit:contain;padding:26px;background:#f4f5ef;display:block}
+body[data-layout=ev] .brand-copy{padding:26px;display:flex;flex-direction:column;flex:1}
+body[data-layout=ev] .brand-copy small{font-size:11px;letter-spacing:1.4px;color:#e7c65a}
+body[data-layout=ev] .brand-copy h3{font-size:25px;margin:8px 0;line-height:1.5}
+body[data-layout=ev] .brand-copy p{font-size:14px;line-height:1.9;color:#b6c7bc}
+body[data-layout=ev] .chips{margin-top:auto;padding-top:16px;gap:8px}
+body[data-layout=ev] .chip{font-size:11px;border-radius:8px;padding:6px 12px}
+body[data-layout=ev] .solar{border-radius:24px;overflow:hidden;border:1px solid #ffffff14;background:#102119;scroll-margin-top:110px}
+body[data-layout=ev] .solar-copy{padding:38px}
+body[data-layout=ev] .solar-copy h2{font-size:clamp(26px,3vw,38px);line-height:1.45}
+body[data-layout=ev] .solar-copy p{font-size:15px;line-height:1.95}
+body[data-layout=ev] .flow{display:flex;flex-wrap:wrap;gap:8px;margin-block:22px}
+body[data-layout=ev] .flow>span{font-size:12px;padding:8px 11px;border-radius:9px}
+body[data-layout=ev] .cta{padding:60px 0 70px;border-top:1px solid #ffffff10;background:#0d1e15}
+body[data-layout=ev] .cta h2{font-size:clamp(28px,4vw,42px);line-height:1.5}
+body[data-layout=ev] .cta p{max-width:650px;margin:15px auto;line-height:1.9;color:#b6c7bc}
+body[data-layout=ev] .modal{padding:20px;backdrop-filter:blur(8px);z-index:1000}
+body[data-layout=ev] .modal-card{width:min(600px,100%);max-height:calc(100dvh - 40px);overflow-y:auto;padding:32px;border-radius:24px;background:#102119;border:1px solid #e7c65a40;box-shadow:0 28px 100px #0009}
+body[data-layout=ev] .modal-card h2{font-size:27px;line-height:1.6;margin:14px 0 25px;padding-inline-end:24px}
+body[data-layout=ev] .close{position:absolute;inset-inline-end:16px;inset-inline-start:auto;top:16px;width:42px;height:42px;display:grid;place-items:center;padding:0;border-radius:50%;font-size:26px;border:1px solid #ffffff25;background:#ffffff08;color:#d7e3da}
+body[data-layout=ev] .fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px}
+body[data-layout=ev] .field{min-width:0}
+body[data-layout=ev] .field label{display:block;font-size:13px;margin-bottom:9px;color:#c7d7cd;min-height:24px}
+body[data-layout=ev] .field :is(input,select){width:100%;min-height:52px;padding:12px;border:1px solid #ffffff26;background:#07170f;color:#f0f5f1;border-radius:11px;font-size:16px}
+body[data-layout=ev] .field input{direction:ltr;text-align:start}
+body[data-layout=ev] .modal-card>.btn{width:100%;margin-top:24px!important}
+body[data-layout=ev] .result{padding:20px;margin-top:22px;border-radius:14px;background:#e7c65a0b;border:1px solid #e7c65a44;line-height:2}
+body[data-layout=ev] .result b{font-size:17px;color:#f3dc91}
+body[data-layout=ev] .result small{display:block;margin-top:12px;color:#b7c9bd;line-height:1.9;font-size:12px}
+body.ev-dialog-open{overflow:hidden}
+@media(max-width:760px){
+ body[data-layout=ev] .wrap{width:calc(100% - 32px)}
+ body[data-layout=ev] .nav{flex-wrap:wrap;gap:4px;padding-block:8px}
+ body[data-layout=ev] .brand{font-size:12px;gap:5px}
+ body[data-layout=ev] .brand img{width:44px;height:44px}
+ body[data-layout=ev] .nav-right{gap:2px}
+ body[data-layout=ev] .back{font-size:11px;padding:8px;min-height:40px;display:flex;align-items:center}
+ body[data-layout=ev] .lang{font-size:11px;padding:6px;min-width:32px}
+ body[data-layout=ev] .hero{min-height:92vh;padding:96px 0 65px;background-size:auto,cover;background-position:center,center 20%}
+ body[data-layout=ev] .hero-copy{padding-top:60px;max-width:100%}
+ body[data-layout=ev] .hero h1{font-size:60px;line-height:1.07}
+ body[data-layout=ev] .hero p{font-size:15px;max-width:520px}
+ body[data-layout=ev] .actions{gap:10px}
+ body[data-layout=ev] .hero .actions>*{flex:1 1 145px}
+ body[data-layout=ev] .hero .actions>.primary{flex-basis:100%}
+ body[data-layout=ev] .ev-quick-nav{display:grid;grid-template-columns:1fr 1fr;padding:8px;gap:4px}
+ body[data-layout=ev] .section{padding:50px 0}
+ body[data-layout=ev] .head{display:block;margin-bottom:22px}
+ body[data-layout=ev] .head h2{font-size:29px;line-height:1.5}
+ body[data-layout=ev] .head>p{margin:14px 0 0;font-size:14px}
+ body[data-layout=ev] :is(.solutions,.brands,.solar){grid-template-columns:1fr;gap:16px}
+ body[data-layout=ev] .solution{min-height:280px}
+ body[data-layout=ev] .brand-card>img{height:245px;padding:20px}
+ body[data-layout=ev] .brand-copy{padding:22px}
+ body[data-layout=ev] .solar{gap:0}
+ body[data-layout=ev] .solar-img{min-height:240px}
+ body[data-layout=ev] .solar-copy{padding:26px 22px}
+ body[data-layout=ev] .modal{padding:12px}
+ body[data-layout=ev] .modal-card{width:100%;max-height:calc(100dvh - 24px);padding:26px 18px}
+ body[data-layout=ev] .modal-card h2{font-size:23px}
+ body[data-layout=ev] .fields{gap:16px 12px}
+ body[data-layout=ev] .field label{font-size:12px;min-height:44px;display:flex;align-items:end}
+}
+@media(max-width:380px){body[data-layout=ev] .brand span{font-size:10px}body[data-layout=ev] .fields{grid-template-columns:1fr}body[data-layout=ev] .field label{min-height:0}body[data-layout=ev] .hero h1{font-size:52px}}
+
+/* EV catalog: brand groups and aligned product cards */
+#chargers{scroll-margin-top:100px}
+.ev-brand-filters{display:flex;gap:8px;flex-wrap:wrap;padding:8px;background:#ffffff04;border:1px solid #ffffff12;border-radius:16px;margin:0 0 38px}
+.ev-brand-filters button{flex:1;min-height:46px;border:1px solid transparent;background:transparent;color:#c8d4cc;border-radius:10px;padding:10px 16px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.ev-brand-filters button[aria-pressed=true]{background:var(--gold);color:#09150e;font-weight:800}
+.ev-brand-filters button:focus-visible,.ev-product a:focus-visible{outline:3px solid #e7c65a;outline-offset:4px}
+.ev-brand-groups{display:grid;gap:42px}.ev-brand-heading{display:flex;align-items:center;gap:14px;margin-bottom:18px}.ev-brand-heading:after{content:"";height:1px;background:#ffffff16;flex:1}.ev-brand-heading h3{font-size:23px;margin:0;color:#f3f6f4;letter-spacing:-.4px}.ev-brand-count{font-size:12px;color:#e7c65a;border:1px solid #e7c65a40;border-radius:8px;padding:4px 8px}
+.ev-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.ev-product{display:grid;grid-template-columns:42% minmax(0,1fr);border:1px solid #ffffff16;border-radius:20px;overflow:hidden;background:#102219;min-width:0;transition:border-color .2s}
+.ev-product:hover{border-color:#e7c65a66}.ev-brand-group[hidden],.ev-product[hidden]{display:none}
+.ev-product>img{width:100%;height:100%;min-height:292px;object-fit:contain;background:#f5f6f2;padding:20px}
+.ev-no-photo{min-height:292px;background:#f5f6f2;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;padding:18px;color:#183d2b;overflow-wrap:anywhere}.ev-no-photo b{font-size:34px}.ev-no-photo strong{font-size:16px}.ev-no-photo small{color:#52675a;font-size:11px;line-height:1.7}
+.ev-product-copy{padding:24px 20px;display:flex;flex-direction:column;min-width:0}.ev-product-copy>small{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:1px}.ev-product h3{font-size:20px;line-height:1.45;margin:10px 0 16px;min-height:58px;overflow-wrap:anywhere}
+.ev-product-spec{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ev-product-spec b{font-size:22px;color:#f1d775}.ev-product-spec span{font-size:11px;border:1px solid #ffffff20;border-radius:6px;padding:4px 7px;color:#c5d6c9}.ev-model{font-size:11px;color:#99aea0;overflow-wrap:anywhere;margin:12px 0 20px;line-height:1.6;text-align:start}
+.ev-product-actions{margin-top:auto;display:grid;gap:12px;text-align:center}.ev-product-actions .btn{font-size:13px;border-radius:10px;min-height:44px;padding:10px}.ev-source{font-size:12px;color:#bdcec3;text-decoration:underline;text-underline-offset:4px;line-height:1.8;padding:4px}
+@media(min-width:761px) and (max-width:1100px){.ev-product{grid-template-columns:1fr}.ev-product>img,.ev-no-photo{height:220px;min-height:220px}.ev-product h3{min-height:58px}}
+@media(max-width:760px){.ev-product-grid{grid-template-columns:1fr;gap:16px}.ev-brand-groups{gap:30px}.ev-brand-filters{gap:4px;margin-bottom:26px}.ev-brand-filters button{flex:1 1 43%;padding:9px 6px;font-size:13px}.ev-brand-heading h3{font-size:21px}.ev-product{grid-template-columns:38% minmax(0,1fr)}.ev-product>img{min-height:270px;padding:12px}.ev-no-photo{min-height:270px;padding:12px}.ev-no-photo b{font-size:28px}.ev-product-copy{padding:18px 14px}.ev-product h3{font-size:18px;min-height:0}.ev-product-spec b{font-size:21px}.ev-model{font-size:10px}}
+@media(max-width:360px){.ev-product{grid-template-columns:1fr}.ev-product>img,.ev-no-photo{height:200px;min-height:200px}}
+
+/* Local manufacturer datasheet illustrations */
+.ev-product>img{background:#fff}
+
+/* Balanced hero: image and copy share the same centered grid. */
+body[data-layout=ev] header .wrap,body[data-layout=ev] .hero>.wrap,body[data-layout=ev] .ev-quick-nav{width:min(1440px,calc(100% - 64px))}
+body[data-layout=ev] .hero{min-height:0;height:auto;padding:112px 0 32px;background:#07110d;overflow:visible}
+body[data-layout=ev] .hero:after{display:none}
+body[data-layout=ev] .hero>.ev-hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:clamp(28px,4vw,64px);align-items:center;direction:ltr}
+body[data-layout=ev] .hero-copy{width:100%;max-width:none;padding:20px 0;margin:0;text-align:start;min-width:0}
+html[dir=rtl] body[data-layout=ev] .hero-copy{direction:rtl}
+body[data-layout=ev] .hero h1{font-size:clamp(52px,5.5vw,82px);line-height:1.04;letter-spacing:-2px;margin:16px 0 24px;text-align:left}
+html[dir=rtl] body[data-layout=ev] .hero h1{text-align:right}
+body[data-layout=ev] .hero p{font-size:17px;line-height:1.95;max-width:560px;margin:0;color:#c3d1c8;text-wrap:pretty}
+body[data-layout=ev] .hero .kicker{font-size:11px;letter-spacing:1.4px}
+body[data-layout=ev] .hero .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px;max-width:560px}
+body[data-layout=ev] .hero .actions>.primary{grid-column:1/-1}
+body[data-layout=ev] .hero .actions>.btn{font-size:14px;line-height:1.6;min-height:50px;padding:12px;text-align:center;white-space:normal}
+body[data-layout=ev] .ev-hero-media{min-width:0;border-radius:24px;overflow:hidden;border:1px solid #ffffff18;background:#0e2117}
+body[data-layout=ev] .ev-hero-media img{display:block;width:100%;height:auto;max-height:580px;object-fit:contain}
+body[data-layout=ev] .ev-quick-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:10px;margin-top:0}
+body[data-layout=ev] .ev-quick-nav>*{min-width:0;text-align:center;line-height:1.7}
+@media(max-width:760px){body[data-layout=ev] header .wrap,body[data-layout=ev] .hero>.wrap,body[data-layout=ev] .ev-quick-nav{width:calc(100% - 32px)}body[data-layout=ev] .hero{padding:96px 0 24px}body[data-layout=ev] .hero>.ev-hero-grid{grid-template-columns:1fr;gap:24px}body[data-layout=ev] .hero-copy{padding:0}body[data-layout=ev] .hero h1{font-size:clamp(48px,12vw,64px);margin:12px 0 18px}body[data-layout=ev] .hero p{font-size:15px;line-height:1.95}body[data-layout=ev] .hero .actions{margin-top:22px;gap:10px}body[data-layout=ev] .hero .actions>.btn{font-size:13px}body[data-layout=ev] .ev-hero-media{border-radius:18px}body[data-layout=ev] .ev-hero-media img{max-height:none}body[data-layout=ev] .ev-quick-nav{grid-template-columns:1fr 1fr}body[data-layout=ev] .ev-quick-nav>a:first-child{grid-column:1/-1}}
