@@ -1,4 +1,4 @@
-const VERSION = 'alo-pwa-v5';
+const VERSION = 'alo-pwa-v6';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
@@ -34,11 +34,8 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
-  // PDFs must always be requested directly so broken/stale copies are never reused.
-  if (url.pathname.toLowerCase().endsWith('.pdf')) {
-    event.respondWith(fetch(request));
-    return;
-  }
+  // Let the browser/CDN handle PDFs directly so HTTP caching and byte-range loading stay fast.
+  if (url.pathname.toLowerCase().endsWith('.pdf')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -52,8 +49,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Scripts/styles: show cached copy immediately, then refresh it in the background.
-  // This removes the visible delay on the Products page while keeping updates fresh.
+  // Scripts/styles: cached instantly, refreshed in background.
   if (['script', 'style'].includes(request.destination)) {
     event.respondWith(
       caches.open(STATIC_CACHE).then(async cache => {
@@ -74,7 +70,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Images/fonts stay cache-first for fast visual loading.
   if (['image', 'font'].includes(request.destination)) {
     event.respondWith(
       caches.match(request).then(cached => cached || fetch(request).then(response => {
