@@ -19,6 +19,12 @@
 /installers-forgot.css
   Cache-Control: no-store, no-cache, must-revalidate
 
+/products.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/products.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
   Service-Worker-Allowed: /
@@ -27,7 +33,6 @@
   Cache-Control: no-cache, must-revalidate
   Content-Type: application/manifest+json
 
-
 /*.pdf
   Content-Type: application/pdf
-  Cache-Control: public, max-age=86400
+  Cache-Control: no-cache, must-revalidate
