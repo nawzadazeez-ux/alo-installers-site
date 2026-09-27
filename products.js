@@ -1,4 +1,4 @@
-const P='assets/products/',D='datasheets/';
+const P='assets/products/',D='';
 const products=[
 {type:'panel',name:'LONGi Hi-MO X10 Anti-Dust Pro',model:'LR8-66HVDF 640-670M',img:'longi-x10.jpg',pdf:'Anti-Dust-LR8-66HVDF-640-670M-Anti-dust-Pro.pdf.pdf',w:'15 years product / 30 years power',s:[['Power','640-670 W'],['Efficiency','Up to 24.8%'],['Cell','Back Contact, 132 cells'],['Protection','IP68 junction box'],['Weight','32.6 kg'],['Size','2382 × 1134 mm']]},
 {type:'panel',name:'Power Solid N-Type Bifacial',model:'PS620W#PVBN',img:'powersolid-620.jpg',pdf:'PS620WPVBN.pdf',w:'15 years (Alo product listing)',s:[['Power','620 W'],['Technology','N-Type Bifacial'],['Cells','144 half-cells'],['Load','2400 / 5400 Pa'],['Weight','33.5 kg'],['Size','2382 × 1134 mm']]},
