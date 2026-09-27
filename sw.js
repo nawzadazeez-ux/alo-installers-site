@@ -1,10 +1,11 @@
-const VERSION = 'alo-pwa-v4';
+const VERSION = 'alo-pwa-v5';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [
   OFFLINE_URL,
   '/manifest.webmanifest',
+  '/products.js',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
@@ -33,7 +34,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
-  // Never cache PDF navigation. Always request the current file from the server.
+  // PDFs must always be requested directly so broken/stale copies are never reused.
   if (url.pathname.toLowerCase().endsWith('.pdf')) {
     event.respondWith(fetch(request));
     return;
@@ -51,20 +52,29 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Scripts and styles are network-first so website updates appear immediately.
+  // Scripts/styles: show cached copy immediately, then refresh it in the background.
+  // This removes the visible delay on the Products page while keeping updates fresh.
   if (['script', 'style'].includes(request.destination)) {
     event.respondWith(
-      fetch(request)
-        .then(response => {
-          if (response.ok) caches.open(STATIC_CACHE).then(cache => cache.put(request, response.clone()));
+      caches.open(STATIC_CACHE).then(async cache => {
+        const cached = await cache.match(request);
+        const refresh = fetch(request).then(response => {
+          if (response.ok) cache.put(request, response.clone());
           return response;
-        })
-        .catch(() => caches.match(request))
+        }).catch(() => null);
+
+        if (cached) {
+          event.waitUntil(refresh);
+          return cached;
+        }
+
+        return (await refresh) || Response.error();
+      })
     );
     return;
   }
 
-  // Images and fonts can stay cache-first for speed.
+  // Images/fonts stay cache-first for fast visual loading.
   if (['image', 'font'].includes(request.destination)) {
     event.respondWith(
       caches.match(request).then(cached => cached || fetch(request).then(response => {
