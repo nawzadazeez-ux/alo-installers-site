@@ -1,0 +1,25 @@
+/* Alo Solar Energy — language-specific typography */
+html[lang="en"] body,
+.lang-en{
+  font-family:"Manrope","Segoe UI",Arial,sans-serif;
+}
+
+html[lang="ku"] body,
+.lang-ku{
+  font-family:"Vazirmatn","Noto Sans Arabic",Tahoma,sans-serif;
+  letter-spacing:0;
+}
+
+html[lang="ar"] body,
+.lang-ar{
+  font-family:"IBM Plex Sans Arabic","Noto Sans Arabic",Tahoma,sans-serif;
+  letter-spacing:0;
+}
+
+body :is(button,input,select,textarea,option){font-family:inherit}
+html[lang="ku"] body{line-height:1.78}
+html[lang="ar"] body{line-height:1.72}
+html[lang="ku"] :is(h1,h2,h3,h4,h5,h6,.btn,button,nav a){font-weight:700}
+html[lang="ar"] :is(h1,h2,h3,h4,h5,h6,.btn,button,nav a){font-weight:700}
+html[lang="ku"] :is(h1,h2,h3,h4,h5,h6){letter-spacing:0!important;line-height:1.4}
+html[lang="ar"] :is(h1,h2,h3,h4,h5,h6){letter-spacing:0!important;line-height:1.35}
