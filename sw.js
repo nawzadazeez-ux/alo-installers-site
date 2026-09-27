@@ -1,4 +1,4 @@
-const VERSION = 'alo-pwa-v3';
+const VERSION = 'alo-pwa-v4';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
@@ -33,6 +33,12 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
+  // Never cache PDF navigation. Always request the current file from the server.
+  if (url.pathname.toLowerCase().endsWith('.pdf')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -45,12 +51,26 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request).then(response => {
-      if (response.ok && ['style', 'script', 'image', 'font'].includes(request.destination)) {
-        caches.open(STATIC_CACHE).then(cache => cache.put(request, response.clone()));
-      }
-      return response;
-    }))
-  );
+  // Scripts and styles are network-first so website updates appear immediately.
+  if (['script', 'style'].includes(request.destination)) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response.ok) caches.open(STATIC_CACHE).then(cache => cache.put(request, response.clone()));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Images and fonts can stay cache-first for speed.
+  if (['image', 'font'].includes(request.destination)) {
+    event.respondWith(
+      caches.match(request).then(cached => cached || fetch(request).then(response => {
+        if (response.ok) caches.open(STATIC_CACHE).then(cache => cache.put(request, response.clone()));
+        return response;
+      }))
+    );
+  }
 });
