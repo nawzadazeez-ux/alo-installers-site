@@ -8,8 +8,10 @@ async function readJson(request){try{return await request.json()}catch{return nu
 async function ensureTables(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT,token_hash TEXT NOT NULL UNIQUE,user_id INTEGER,role TEXT NOT NULL,expires_at TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS login_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT,key TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_login_events (id INTEGER PRIMARY KEY AUTOINCREMENT,ip_hash TEXT NOT NULL,username_hash TEXT,status TEXT NOT NULL,user_agent TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash,role,expires_at)').run();
  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_attempts_key ON login_attempts(key,created_at)').run();
+ await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_admin_login_events_created ON admin_login_events(created_at)').run();
 }
 async function verifyTurnstile(env,request,token){
  const secret=String(env.TURNSTILE_SECRET_KEY||'').trim();
@@ -25,15 +27,31 @@ async function verifyTurnstile(env,request,token){
  const hostOK=hostname==='alosolarenergy.com'||hostname.endsWith('.alosolarenergy.com');
  return {ok:result?.success===true&&hostOK&&action==='admin_login',error:'Security verification failed.'};
 }
-async function throttle(env,request){
+async function identityKey(request){
  const ip=request.headers.get('CF-Connecting-IP')||'unknown';
- const key=await sha256(`admin:${ip}`);
- const row=await env.DB.prepare("SELECT COUNT(*) count FROM login_attempts WHERE key=? AND created_at>datetime('now','-15 minutes')").bind(key).first();
- if((row?.count||0)>=8)return false;
- await env.DB.prepare('INSERT INTO login_attempts(key) VALUES(?)').bind(key).run();
- return true;
+ return {ip,key:await sha256(`admin:${ip}`),ipHash:await sha256(ip)};
 }
-async function clearThrottle(env,request){const ip=request.headers.get('CF-Connecting-IP')||'unknown',key=await sha256(`admin:${ip}`);await env.DB.prepare('DELETE FROM login_attempts WHERE key=?').bind(key).run()}
+async function checkThrottle(env,request){
+ const {key}=await identityKey(request);
+ const row=await env.DB.prepare("SELECT COUNT(*) count, MIN(created_at) first_at FROM login_attempts WHERE key=? AND created_at>datetime('now','-15 minutes')").bind(key).first();
+ const count=Number(row?.count||0);
+ if(count>=5){
+  const first=await env.DB.prepare("SELECT CAST(MAX(0,900-(strftime('%s','now')-strftime('%s',MIN(created_at)))) AS INTEGER) retry_after FROM login_attempts WHERE key=? AND created_at>datetime('now','-15 minutes')").bind(key).first();
+  return {allowed:false,retryAfter:Math.max(1,Number(first?.retry_after||900))};
+ }
+ return {allowed:true,retryAfter:0};
+}
+async function addFailedAttempt(env,request){const {key}=await identityKey(request);await env.DB.prepare('INSERT INTO login_attempts(key) VALUES(?)').bind(key).run()}
+async function clearThrottle(env,request){const {key}=await identityKey(request);await env.DB.prepare('DELETE FROM login_attempts WHERE key=?').bind(key).run()}
+async function logEvent(env,request,username,status){
+ try{
+  const {ipHash}=await identityKey(request);
+  const usernameHash=username?await sha256(String(username).toLowerCase()):null;
+  const ua=clean(request.headers.get('User-Agent')||'',220);
+  await env.DB.prepare('INSERT INTO admin_login_events(ip_hash,username_hash,status,user_agent) VALUES(?,?,?,?)').bind(ipHash,usernameHash,status,ua).run();
+  await env.DB.prepare("DELETE FROM admin_login_events WHERE created_at<datetime('now','-90 days')").run();
+ }catch(e){console.error('Admin login event log failed',e)}
+}
 async function issueSession(env){const token=randomHex(32),hash=await sha256(token);await env.DB.prepare("INSERT INTO sessions(token_hash,user_id,role,expires_at) VALUES(?,?,?,datetime('now','+7 days'))").bind(hash,null,'admin').run();return token}
 const setCookie=(name,value,maxAge)=>`${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
 export async function onRequestPost({request,env}){
@@ -42,13 +60,22 @@ export async function onRequestPost({request,env}){
   if(!env.ADMIN_USERNAME||!env.ADMIN_PASSWORD)return json({error:'Admin credentials are not configured.'},500);
   await ensureTables(env);
   const data=await readJson(request);if(!data)return json({error:'Invalid request.'},400);
-  const challenge=await verifyTurnstile(env,request,data.turnstileToken);if(!challenge.ok)return json({error:challenge.error},403);
-  if(!await throttle(env,request))return json({error:'Too many attempts. Try again later.'},429);
   const username=clean(data.username,80),password=String(data.password||'');
+  const challenge=await verifyTurnstile(env,request,data.turnstileToken);
+  if(!challenge.ok){await logEvent(env,request,username,'turnstile_failed');return json({error:challenge.error},403)}
+  const throttle=await checkThrottle(env,request);
+  if(!throttle.allowed){await logEvent(env,request,username,'locked');return json({error:'Too many failed attempts. Try again in about 15 minutes.',retryAfter:throttle.retryAfter},429,{'retry-after':String(throttle.retryAfter)})}
   const userOK=(await sha256(username))===(await sha256(env.ADMIN_USERNAME));
   const passOK=(await sha256(password))===(await sha256(env.ADMIN_PASSWORD));
-  if(!userOK||!passOK)return json({error:'Incorrect admin credentials.'},401);
+  if(!userOK||!passOK){
+   await addFailedAttempt(env,request);
+   await logEvent(env,request,username,'failed');
+   const after=await checkThrottle(env,request);
+   if(!after.allowed)return json({error:'Too many failed attempts. Admin login is temporarily locked for this connection.',retryAfter:after.retryAfter},429,{'retry-after':String(after.retryAfter)});
+   return json({error:'Incorrect admin credentials.'},401);
+  }
   await clearThrottle(env,request);
+  await logEvent(env,request,username,'success');
   const token=await issueSession(env);
   return json({ok:true},200,{'set-cookie':setCookie('alo_admin_session',token,604800)});
  }catch(error){console.error('Admin Turnstile login failed',error);return json({error:'Server error. Please try again.'},500)}
