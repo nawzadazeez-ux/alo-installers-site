@@ -4,7 +4,7 @@
  const turnstileBox=form.querySelector('.cf-turnstile');
  const twoFactorLabel=document.createElement('label');
  twoFactorLabel.id='adminTwoFactorLabel';
- twoFactorLabel.innerHTML='2FA Code <input id="adminTotpCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" dir="ltr" placeholder="123456"><small style="display:block;margin-top:6px;opacity:.72">کۆدی ٦ ژمارەیی Google/Microsoft Authenticator — تەنها دوای چالاککردنی 2FA پێویستە.</small>';
+ twoFactorLabel.innerHTML='2FA Code <input id="adminTotpCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" dir="ltr" placeholder="123456"><small>کۆدی ٦ ژمارەیی Google/Microsoft Authenticator — تەنها دوای چالاککردنی 2FA پێویستە.</small>';
  if(turnstileBox)turnstileBox.before(twoFactorLabel);else form.querySelector('button')?.before(twoFactorLabel);
  form.onsubmit=async event=>{
   event.preventDefault();
@@ -19,6 +19,7 @@
    let data={};try{data=await response.json()}catch{}
    if(!response.ok)throw new Error(data.error||'هەڵەیەک ڕوویدا');
    if(typeof showPanel==='function')showPanel();else location.reload();
+   window.dispatchEvent(new Event('alo-admin-login-success'));
   }catch(err){if(error)error.textContent=err.message;if(window.turnstile)window.turnstile.reset()}
   finally{if(button)button.disabled=false}
  };
