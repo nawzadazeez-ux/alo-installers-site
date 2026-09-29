@@ -1,4 +1,6 @@
 (()=>{
+ const timeoutCss=document.createElement('link');timeoutCss.rel='stylesheet';timeoutCss.href='admin-session-timeout.css?v=1';document.head.appendChild(timeoutCss);
+ const timeoutScript=document.createElement('script');timeoutScript.src='admin-session-timeout.js?v=1';timeoutScript.defer=true;document.head.appendChild(timeoutScript);
  const form=document.getElementById('adminLoginForm');
  if(!form)return;
  const turnstileBox=form.querySelector('.cf-turnstile');
