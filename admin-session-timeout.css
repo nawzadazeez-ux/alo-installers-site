@@ -1,0 +1,6 @@
+.admin-session-warning{position:fixed;z-index:99999;inset:auto 18px 18px 18px;max-width:620px;margin:auto;display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;padding:16px 18px;border:1px solid rgba(255,255,255,.16);border-radius:16px;background:#151a18;color:#fff;box-shadow:0 18px 55px rgba(0,0,0,.35)}
+.admin-session-warning.hidden{display:none}
+.admin-session-warning b{grid-column:1/-1;font-size:15px}
+.admin-session-warning span{line-height:1.7;color:#e7ece9}
+.admin-session-warning button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;background:#fff;color:#111}
+@media (max-width:640px){.admin-session-warning{grid-template-columns:1fr;inset:auto 10px 10px 10px}.admin-session-warning b{grid-column:auto}.admin-session-warning button{width:100%}}
