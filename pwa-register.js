@@ -19,10 +19,6 @@
     }
   });
 
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
-  });
+  // Let the new worker control future requests without reloading the current page.
+  // Reloading on first activation replayed the intro and interrupted page input.
 })();
