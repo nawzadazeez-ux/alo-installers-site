@@ -1209,7 +1209,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<script src="solar-knowledge.js"></script>
+<link rel="stylesheet" href="ai-modes.css?v=1">
 <script>
 (function(){
   const toggle=document.getElementById('aiChatToggle');
@@ -1224,6 +1224,25 @@ document.addEventListener('DOMContentLoaded', function () {
   const title=document.getElementById('aiTitle');
   const status=document.getElementById('aiStatus');
   const transcript=[];
+  let history=[],mode='ask',busy=false;
+  const sessionKey='alo-ai-session-v1';
+  try{const saved=JSON.parse(sessionStorage.getItem(sessionKey)||'{}');
+    if(Array.isArray(saved.history))history=saved.history.filter(m=>m&&['user','assistant'].includes(m.role)&&typeof m.content==='string').slice(-24);
+    if(['ask','solar','ev'].includes(saved.mode))mode=saved.mode;
+  }catch{}
+  const saveSession=()=>{try{sessionStorage.setItem(sessionKey,JSON.stringify({history:history.slice(-24),mode}))}catch{}};
+  const aiCopy={
+    ku:{status:'یاریدەدەری زیرەکی Alo',modes:['پرسیار لە Alo','سیستەمی خۆری من','شەحنکەری سەیارە'],reset:'گفتوگۆی نوێ',error:'ئێستا یاریدەدەری زیرەک بەردەست نییە. تکایە دووبارە هەوڵ بدە یان لە WhatsApp پەیوەندیمان پێوە بکە.',limit:'تکایە کەمێک چاوەڕێ بکە، پاشان دووبارە هەوڵ بدە.',prompts:['چۆن دەتوانیت یارمەتیم بدەیت؟','یارمەتیم بدە سیستەمێکی خۆری گونجاو هەڵبژێرم.','یارمەتیم بدە شەحنکەرێک بۆ سەیارەکەم هەڵبژێرم.']},
+    ar:{status:'مساعد Alo الذكي',modes:['اسأل Alo','نظامي الشمسي','شاحن سيارتي'],reset:'محادثة جديدة',error:'المساعد الذكي غير متاح الآن. حاول مجدداً أو تواصل معنا عبر WhatsApp.',limit:'انتظر قليلاً ثم حاول مجدداً.',prompts:['كيف يمكنك مساعدتي؟','ساعدني في اختيار نظام شمسي مناسب.','ساعدني في اختيار شاحن مناسب لسيارتي.']},
+    en:{status:'Alo AI adviser',modes:['Ask Alo','Build my solar system','Find my EV charger'],reset:'New chat',error:'AI is unavailable right now. Please try again or contact us on WhatsApp.',limit:'Please wait a little before trying again.',prompts:['How can you help me?','Help me choose a suitable solar system.','Help me choose an EV charger for my car.']}
+  };
+  const modesBar=document.createElement('div');modesBar.className='ai-modes';quick.before(modesBar);
+  input.maxLength=3000;
+  function renderModes(){const t=aiCopy[lang()];modesBar.replaceChildren();
+    ['ask','solar','ev'].forEach((key,i)=>{const b=document.createElement('button');b.type='button';b.textContent=t.modes[i];b.setAttribute('aria-pressed',String(key===mode));b.disabled=busy;
+      b.onclick=()=>{if(busy)return;mode=key;saveSession();renderModes();send(t.prompts[i])};modesBar.append(b)});
+    const reset=document.createElement('button');reset.type='button';reset.textContent=t.reset;reset.disabled=busy;reset.onclick=()=>{history=[];transcript.length=0;messages.replaceChildren();saveSession();applyUi()};modesBar.append(reset);
+  }
 
   const ui={
     en:{button:'Solar Help',title:'Alo Solar Assistant',status:'Free Knowledge Mode',placeholder:'Ask a solar question…',wa:'Continue on WhatsApp',hello:'Hello! I am the Alo Solar Assistant. I can give detailed guidance about system sizing, On-Grid, Off-Grid and Hybrid systems, panels, MPPT and strings, inverters, lithium batteries, protection, cables, earthing, weather, cleaning, maintenance, troubleshooting and your Solar Calculator selection. For safety, final design and settings are confirmed by our technical team; prices are never provided in chat.',chips:['How solar works','System sizing','Battery sizing','Safety','Maintenance'],fallback:'Please ask me about solar-system design, panels, MPPT and strings, inverters, batteries, DC/AC protection, cable sizing, earthing, shading, weather, cleaning, maintenance, faults, savings or your calculator selection. You can include your daytime load, night load, phase and required backup hours for a more useful answer.'},
@@ -1238,7 +1257,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const context=()=>({
     panels:Math.max(1,parseInt(document.getElementById('calcKwh')?.value)||1),
     panel:cleanOption('calcPanel'),phase:cleanOption('calcSystemType'),inverter:cleanOption('calcInverter'),
-    battery:cleanOption('calcBattery'),qty:Math.max(0,parseInt(document.getElementById('calcBatteryQty')?.value)||0)
+    battery:cleanOption('calcBattery'),qty:Math.max(0,parseInt(document.getElementById('calcBatteryQty')?.value)||0),
+    dayAmps:document.getElementById('easyDayAmps')?.value||'',nightAmps:document.getElementById('easyNightAmps')?.value||'',easyPhase:cleanOption('easyPhase'),quality:document.querySelector('input[name="easyQuality"]:checked')?.value||''
   });
   function systemSummary(l){
     const x=context();
@@ -1254,53 +1274,26 @@ document.addEventListener('DOMContentLoaded', function () {
     messages.scrollTop=messages.scrollHeight;
     transcript.push((who==='user'?'Customer: ':'Alo Assistant: ')+text);
   };
-  const contains=(q,words)=>words.some(word=>q.includes(word));
-  function fallbackAnswer(raw){
-    const l=lang(),q=raw.toLocaleLowerCase();
-    if(contains(q,['price','cost','نرخ','بەها','سعر','تكلفة'])) return l==='ku'?'بۆ نرخی دروست، تکایە هەڵبژاردەکانت تەواو بکە و لە ڕێگای WhatsApp پەیوەندی بە تیمی Alo Solar Energy بکە؛ چاتەکە نرخ دیاری ناکات.':l==='ar'?'للحصول على سعر دقيق، أكمل اختياراتك وتواصل مع فريق Alo Solar Energy عبر WhatsApp؛ المساعد لا يعرض الأسعار.':'For accurate pricing, complete your selections and contact the Alo Solar Energy team via WhatsApp; the assistant does not provide prices.';
-    const knowledgeAnswer=window.ALO_SOLAR_KNOWLEDGE?.answer(raw,l);
-    if(knowledgeAnswer)return knowledgeAnswer;
-    if(contains(q,['how does solar work','how solar works','چۆن کار دەکات','كيف يعمل النظام','كيف تعمل الطاقة الشمسية'])) return l==='ku'?'پانێڵە خۆرییەکان ڕووناکی خۆر دەگۆڕن بۆ کارەبا. ئینڤێرتەر ئەو کارەبایە بە شێوەی گونجاو بۆ ماڵ یان کاروبار دابین دەکات، و پاتریش وزە هەڵدەگرێت بۆ شەو یان کاتی پچڕانی کارەبا.':l==='ar'?'تحوّل الألواح ضوء الشمس إلى كهرباء، ويجعلها الإنفرتر مناسبة للمنزل أو العمل، بينما تخزن البطاريات الطاقة الزائدة للاستخدام ليلاً أو عند انقطاع الشبكة.':'Solar panels convert sunlight into electricity. The inverter makes it suitable for your home or business, while batteries can store extra energy for night use or grid outages.';
-    if(contains(q,['how many panels','number of panels','چەند پانێڵ','چەند لەوحە','كم لوح','عدد الألواح'])) return l==='ku'?'ژمارەی پانێڵەکان بە بەکارهێنانی ڕۆژانەی کارەبا، بۆشایی سەربان، توانای پانێڵ و بارە داواکراوەکان دەگۆڕێت. تیمەکەمان پێش پشتڕاستکردنەوەی دیزاین ئەم وردەکارییانە هەڵدەسەنگێنێت.':l==='ar'?'يعتمد عدد الألواح على الاستهلاك اليومي ومساحة السطح وقدرة اللوح والأحمال المطلوبة. يراجع فريقنا هذه التفاصيل قبل اعتماد التصميم.':'Panel count depends on daily electricity use, available roof space, panel wattage and required loads. Our team reviews these details before confirming the design.';
-    if(contains(q,['grid outage','power outage','when power is off','پچڕانی کارەبا','کارەبا بپچڕێت','انقطاع الكهرباء','تنقطع الكهرباء'])) return l==='ku'?'سیستەمی Hybrid و Off-Grid ئەگەر بە پاتری و بە دروستی دیزاین کرابن دەتوانن بارە هەڵبژێردراوەکان لە کاتی پچڕانی کارەبا بەردەوام بکەن. سیستەمی ئاسایی On-Grid بۆ پاراستن لە کاتی پچڕان دادەخرێت.':l==='ar'?'يمكن لنظامي Hybrid وOff-Grid تشغيل الأحمال المحددة عند تصميمهما جيداً مع البطاريات. أما نظام On-Grid الاعتيادي فيتوقف وقت الانقطاع لأسباب تتعلق بالسلامة.':'Hybrid and Off-Grid systems can keep selected loads running when properly designed with batteries. A standard On-Grid system normally shuts down during an outage for safety.';
-    if(contains(q,['backup time','how long battery','battery hours','کاتژمێری پاتری','پاتری چەند','ماوەی پشتیوانی','مدة البطارية','كم ساعة','مدة الدعم'])) return l==='ku'?'ماوەی کارکردنی پاتری بە قەبارەی پاتری، ئاستی شەحن و باری ئامێرەکان پەیوەستە. دوای دیاریکردنی بار و ماوەی پشتیوانی، قەبارەی گونجاوی پاتری حیساب دەکرێت.':l==='ar'?'تعتمد مدة الدعم على سعة البطارية ومستوى شحنها واستهلاك الأجهزة المتصلة. نحدد السعة بعد معرفة الأحمال الأساسية ومدة الدعم المطلوبة.':'Backup time depends on battery capacity, charge level and the power used by connected appliances. We size the battery after identifying essential loads and the required duration.';
-    if(contains(q,['cloudy','rainy','cloud','rain','هەوراوی','باراناوی','هەور','باران','غائم','غائمة','ممطر','مطر'])) return l==='ku'?'بەڵێ، پانێڵەکان لە ڕۆژی هەوراوی و باراناویش لە ڕووناکی بەردەست وزە بەرهەم دەهێنن، بەڵام بەرهەمەکە لە ڕۆژی خۆری کەمترە. قەبارەکردنی دروست و پلانی پاتری یارمەتی بە جێگیری سیستەم دەدات.':l==='ar'?'نعم، تستمر الألواح بالإنتاج من ضوء النهار المتاح في الأيام الغائمة والممطرة، لكن الإنتاج يكون أقل من اليوم المشمس. يساعد التصميم الجيد وتخطيط البطاريات في استقرار التشغيل.':'Yes. Panels still produce from available daylight on cloudy and rainy days, but output is lower than on a clear sunny day. Good sizing and battery planning help maintain reliable operation.';
-    if(contains(q,['how often clean','cleaning frequency','when to clean','چەند جار','کەی پاک','پاککردنەوەی پانێڵ','كم مرة','متى أنظف','تنظيف الألواح'])) return l==='ku'?'کاتی پاککردنەوە بە خۆڵ، کەشوهەوا و شوێنی دامەزراندن پەیوەستە. لە ناوچە خۆڵاوییەکاندا باشە پانێڵەکان بەردەوام بپشکنرێن و کاتێک خۆڵ کاراییان کەم کرد، بە شێوەی دروست پاک بکرێنەوە.':l==='ar'?'يعتمد تكرار التنظيف على الغبار والطقس وموقع التركيب. في المناطق المغبرة افحص الألواح بانتظام ونظفها بأمان عندما تؤثر الأوساخ في الأداء.':'Cleaning frequency depends on dust, weather and location. In dusty areas, inspect panels regularly and clean them safely whenever dirt noticeably reduces performance.';
-    if(contains(q,['after-sales','after sales','support after','دوای فرۆشتن','پشتیوانی دوای','ما بعد البيع','دعم بعد'])) return l==='ku'?'بەڵێ، Alo Solar Energy پشتیوانی ناوخۆیی بۆ پشکنین، ڕێکخستن، پاککردن، چارەسەرکردنی کێشە و چاککردنەوە دابین دەکات. ماوەی گەرەنتیش بە جۆری ئامێری هەڵبژێردراو دەگۆڕێت.':l==='ar'?'نعم، توفر Alo Solar Energy دعماً محلياً للفحص والإعداد والتنظيف وحل المشكلات والصيانة. وتختلف مدة الضمان حسب المعدات المختارة.':'Yes. Alo Solar Energy provides local support for inspection, setup, cleaning, troubleshooting and maintenance. Warranty duration varies by the selected equipment.';
-    if(contains(q,['services','service','خزمەتگوزاری','خزمەت','خدمات','خدمة'])) return l==='ku'?'خزمەتگوزارییەکانمان بریتین لە: دیزاین و قەبارەکردنی سیستەمی خۆر، سیستەمی ماڵ و بازرگانی، Hybrid و Off-Grid، دابینکردنی پانێڵ و ئینڤێرتەر و پاتری، دامەزراندن و وایەرینگ، ڕێکخستن، پشکنین، پاککردن و چاککردنەوە.':l==='ar'?'خدماتنا تشمل تصميم وحساب حجم النظام الشمسي، الأنظمة المنزلية والتجارية، Hybrid وOff-Grid، تجهيز الألواح والعاكسات والبطاريات، التركيب والأسلاك والإعداد والفحص والتنظيف والصيانة.':'Our services include solar design and sizing, residential and commercial systems, Hybrid and Off-Grid solutions, equipment supply, installation, wiring, setup, inspection, cleaning and maintenance.';
-    if(contains(q,['on-grid','ongrid','on grid','ئۆن گرید','اون گريد','متصل بالشبكة'])) return l==='ku'?'سیستەمی On-Grid بە تۆڕی کارەباوە پەیوەستە و بۆ کەمکردنەوەی بەکارهێنانی کارەبای تۆڕ لە ڕۆژدا گونجاوە. بە شێوەی ئاسایی بێ پاترییە و لە کاتی پچڕانی تۆڕ پشتیوانی نادات، مەگەر چارەسەری تایبەتی بۆ دابنرێت.':l==='ar'?'نظام On-Grid متصل بالشبكة ومناسب لتقليل استهلاك كهرباء الشبكة نهاراً. يعمل عادةً من دون بطارية ولا يوفر طاقة احتياطية عند انقطاع الشبكة إلا بتجهيز خاص.':'On-Grid connects to the utility grid and is suited to reducing daytime grid use. It normally has no battery backup and shuts down during an outage unless specially designed otherwise.';
-    if(contains(q,['off-grid','offgrid','off grid','ئۆف گرید','اوف گريد','خارج الشبكة'])) return l==='ku'?'سیستەمی Off-Grid بە پانێڵ و پاتری کار دەکات و بۆ شوێنێک گونجاوە کە تۆڕی کارەبا نییە یان پشتپێبەستراو نییە. قەبارەی پاتری بە باری شەوانە و ماوەی پشتیوانی دیاری دەکرێت.':l==='ar'?'نظام Off-Grid يعمل بالألواح والبطاريات، وهو مناسب للمواقع التي لا تتوفر فيها شبكة موثوقة. تحدد سعة البطارية حسب الأحمال الليلية ومدة الدعم المطلوبة.':'Off-Grid uses solar panels and batteries and suits locations without a reliable grid. Battery capacity is sized from night loads and required backup time.';
-    if(contains(q,['hybrid','هایبرید','هجين'])) return l==='ku'?'سیستەمی Hybrid خۆر، پاتری و تۆڕ پێکەوە بەڕێوە دەبات. بۆ کەمکردنەوەی پشتبەستن بە تۆڕ و بەردەوامبوونی بارە گرنگەکان لە کاتی پچڕانی کارەبا گونجاوە.':l==='ar'?'نظام Hybrid يدير الطاقة الشمسية والبطارية والشبكة معاً، وهو مناسب لتقليل الاعتماد على الشبكة وتشغيل الأحمال المهمة أثناء الانقطاع.':'Hybrid manages solar, battery and grid together. It is suited to reducing grid dependence and keeping important loads running during outages.';
-    if(contains(q,['system types','هەڵبژاردەی سیستەم','أنواع الأنظمة','نوع النظام'])) return l==='ku'?'سێ چارەسەری سەرەکی هەیە: On-Grid بۆ کەمکردنەوەی بەکارهێنانی تۆڕ، Off-Grid بۆ سەربەخۆیی بە پاتری، و Hybrid بۆ بەڕێوەبردنی خۆر و پاتری و تۆڕ پێکەوە.':l==='ar'?'الأنواع الرئيسية هي: On-Grid لتقليل استخدام الشبكة، وOff-Grid للاستقلال باستخدام البطاريات، وHybrid لإدارة الشمس والبطارية والشبكة معاً.':'The main options are On-Grid for reducing grid use, Off-Grid for battery-based independence, and Hybrid for managing solar, battery and grid together.';
-    if(contains(q,['brand','brands','براند','ماركة','علامات'])) return l==='ku'?'لە وێبسایتەکە براندەکانی LONGi، Deye، Pylontech، Power Solid و Hoymiles پیشان دراون. هەروەها لە Calculator ـەکە هەڵبژاردەکانی Medald Power، Bryyzee، 3Watt و EVE بەردەستن.':l==='ar'?'العلامات المعروضة تشمل LONGi وDeye وPylontech وPower Solid وHoymiles، كما تتوفر اختيارات Medald Power وBryyzee و3Watt وEVE في الحاسبة.':'Brands shown include LONGi, Deye, Pylontech, Power Solid and Hoymiles, with Medald Power, Bryyzee, 3Watt and EVE also available in the calculator.';
-    if(contains(q,['about','company','alo','کۆمپانیا','دەربارە','شركة','عن الشركة'])) return l==='ku'?'Alo Solar Energy لە هەولێر چارەسەری وزەی خۆر بۆ ماڵ، دوکان، ئۆفیس، کارگە، کێڵگە و کاروبار دابین دەکات؛ لە ڕاوێژ و دیزاینەوە تا دامەزراندن و پشتیوانی دوای فرۆشتن.':l==='ar'?'توفر Alo Solar Energy في أربيل حلول الطاقة الشمسية للمنازل والمحلات والمكاتب والمصانع والمزارع والأعمال، من الاستشارة والتصميم إلى التركيب ودعم ما بعد البيع.':'Alo Solar Energy provides solar solutions in Erbil for homes, shops, offices, factories, farms and businesses, from consultation and design through installation and after-sales support.';
-    if(contains(q,['my system','system','سیستەمەکەم','سیستەم','نظامي','نظام'])) return systemSummary(l);
-    if(contains(q,['battery','پاتری','پاتری','بطارية','بطاري'])){const x=context();return l==='ku'?`تۆ ${x.qty} دانە ${x.battery} هەڵبژاردووە. ${x.qty===0?'ئەگەر پشتیوانی لە کاتی پچڕانی کارەبا دەوێت، پاتری هەڵبژێرە.':'ژمارەی کاتژمێری پشتیوانی بە باری کارەبا و بەکارهێنانەکەت دەگۆڕێت.'}`:l==='ar'?`لقد اخترت ${x.qty} من ${x.battery}. ${x.qty===0?'اختر بطارية إذا كنت تحتاج إلى طاقة احتياطية وقت انقطاع الشبكة.':'تتغير مدة الدعم حسب الأحمال والاستهلاك.'}`:`You selected ${x.qty} × ${x.battery}. ${x.qty===0?'Choose a battery if you need backup during grid outages.':'Backup duration depends on your electrical loads and usage.'}`;}
-    if(contains(q,['warranty','guarantee','گەرەنتی','ضمان'])){const x=context(),pw=document.getElementById('calcPanel')?.selectedOptions?.[0]?.dataset.warranty||'',iw=document.getElementById('calcInverter')?.selectedOptions?.[0]?.dataset.warranty||'',bw=x.qty>0?(document.getElementById('calcBattery')?.selectedOptions?.[0]?.dataset.warranty||''):'—';return l==='ku'?`بەپێی هەڵبژاردەکانت: گەرەنتی پانێڵ ${pw}، ئینڤێرتەر ${iw} و پاتری ${bw}. وردەکاری مەرجەکانی گەرەنتی لەلایەن تیمی Alo پشتڕاست دەکرێتەوە.`:l==='ar'?`حسب اختياراتك: ضمان اللوح ${pw}، والعاكس ${iw}، والبطارية ${bw}. يؤكد فريق Alo تفاصيل وشروط الضمان.`:`Based on your selections: panel warranty ${pw}, inverter warranty ${iw}, and battery warranty ${bw}. The Alo team confirms the detailed warranty terms.`;}
-    if(contains(q,['panel','solar','پانێڵ','لەوحە','سۆلەر','لوح','ألواح','شمسي'])){const x=context();return l==='ku'?`تۆ ${x.panels} دانە پانێڵی ${x.panel} هەڵبژاردووە. گونجانی ژمارەی پانێڵەکان بە ئینڤێرتەرەکە دەبێت پێش دامەزراندن پشتڕاست بکرێتەوە.`:l==='ar'?`لقد اخترت ${x.panels} لوحاً من نوع ${x.panel}. يجب تأكيد توافق عدد الألواح مع العاكس قبل التركيب.`:`You selected ${x.panels} × ${x.panel}. Panel-count compatibility with the inverter should be confirmed before installation.`;}
-    if(contains(q,['inverter','ئینڤێرتەر','عاكس','انفرتر'])){const x=context();return l==='ku'?`ئینڤێرتەری هەڵبژێردراو: ${x.inverter} بۆ سیستەمی ${x.phase}. دەبێت توانای ئینڤێرتەر، ڤۆڵتاژی string و کۆی توانای پانێڵەکان پێکەوە بگونجێن.`:l==='ar'?`العاكس المحدد هو ${x.inverter} لنظام ${x.phase}. يجب توافق قدرة العاكس وجهد السلسلة وإجمالي قدرة الألواح.`:`Selected inverter: ${x.inverter} for a ${x.phase} system. Inverter capacity, string voltage and total panel power must be compatible.`;}
-    if(contains(q,['email','ئیمەیڵ','برید','ايميل'])) return l==='ku'?'ئیمەیڵی کۆمپانیا: alosolarenergy2025@gmail.com':l==='ar'?'البريد الإلكتروني للشركة: alosolarenergy2025@gmail.com':'Company email: alosolarenergy2025@gmail.com';
-    if(contains(q,['facebook','tiktok','social','فەیسبوک','تیکتۆک','سۆشیال','فيسبوك','تيكتوك','تواصل اجتماعي'])) return l==='ku'?'دەتوانیت Alo Solar Energy لە Facebook و TikTok بەدواداچوون بکەیت؛ لینکەکانی هەردووکیان لە خوارەوەی وێبسایتەکە هەن.':l==='ar'?'يمكنك متابعة Alo Solar Energy على Facebook وTikTok من الروابط الموجودة أسفل الموقع.':'You can follow Alo Solar Energy on Facebook and TikTok using the links in the website footer.';
-    if(contains(q,['location','address','where','شوێن','ناونیشان','لەکوێ','موقع','عنوان','اين'])) return l==='ku'?'ناونیشان: هەولێر – هەولێری نوێ، بەرامبەر مزگەوتی سەید جەعفەر.':l==='ar'?'العنوان: أربيل – أربيل الجديدة، مقابل جامع سيد جعفر.':'Address: New Erbil, opposite Said Jahffar Mosque.';
-    if(contains(q,['contact','phone','whatsapp','پەیوەندی','ژمارە','واتس','اتصال','تواصل','رقم','واتساب'])) return l==='ku'?'پەیوەندیمان پێوە بکە: \u200E0776 440 0440\u200E یان \u200E0750 476 0468\u200E. شوێن: هەولێر – هەولێری نوێ، بەرامبەر مزگەوتی سەید جەعفەر.':l==='ar'?'اتصل بنا على \u200E0776 440 0440\u200E أو \u200E0750 476 0468\u200E. الموقع: أربيل الجديدة، مقابل جامع سيد جعفر.':'Call 0776 440 0440 or 0750 476 0468. Location: New Erbil, opposite Said Jahffar Mosque.';
-    if(contains(q,['installation','clean','دامەزراندن','پاککردن','تركيب','تنظيف','صيانة'])) return l==='ku'?'خزمەتگوزاریی دیزاین، دامەزراندن، وایەرینگ، ڕێکخستن، پشکنین، پاککردن و چاککردنەوەمان هەیە لە هەولێر و دەرەوەی هەولێر.':l==='ar'?'نوفر التصميم والتركيب والأسلاك والإعداد والفحص والتنظيف والصيانة داخل أربيل وخارجها.':'We provide design, installation, wiring, setup, inspection, cleaning and maintenance in and outside Erbil.';
-    if(contains(q,['hello','hi','سڵاو','مرحبا','السلام'])) return ui[l].hello;
-    return ui[l].fallback;
-  }
   async function answer(raw){
-    return fallbackAnswer(raw);
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),55000);
+    try{const response=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({message:raw,language:lang(),mode,history:history.slice(-24),calculator:context()})});
+      const data=await response.json();if(!response.ok||typeof data.answer!=='string'||!data.answer.trim()){const error=new Error('unavailable');error.status=response.status;throw error}return data.answer;
+    }finally{clearTimeout(timer)}
   }
   function applyUi(){
-    const t=ui[lang()];buttonText.textContent=t.button;title.textContent=t.title;status.textContent=t.status;input.placeholder=t.placeholder;whatsapp.textContent=t.wa;
+    const t=ui[lang()];buttonText.textContent=t.button;title.textContent=t.title;status.textContent=aiCopy[lang()].status;renderModes();input.placeholder=t.placeholder;whatsapp.textContent=t.wa;
     quick.innerHTML='';t.chips.forEach(label=>{const b=document.createElement('button');b.type='button';b.className='ai-chip';b.textContent=label;b.addEventListener('click',()=>send(label));quick.appendChild(b);});
     if(!messages.children.length)add(lang()==='ku'?'سڵاو، من یاریدەدەری AI ـی Alo ـم. چۆن دەتوانم یارمەتیت بدەم؟':lang()==='ar'?'مرحباً، أنا مساعد Alo الذكي. كيف يمكنني مساعدتك؟':'Hello, I’m Alo’s AI assistant. How can I help?','bot');
   }
   window.updateAiChatUi=applyUi;
   async function send(text){
-    const clean=String(text||'').trim();if(!clean)return;
-    add(clean,'user');input.value='';input.disabled=true;
+    const clean=String(text||'').trim();if(!clean||busy||clean.length>3000)return;
+    const requestLang=lang();busy=true;renderModes();add(clean,'user');input.value='';input.disabled=true;
+    form.querySelector('button')?.setAttribute('disabled','');
     const typing=document.createElement('div');typing.className='ai-message bot ai-typing';typing.textContent='•••';messages.appendChild(typing);messages.scrollTop=messages.scrollHeight;
-    const reply=await answer(clean);typing.remove();add(reply,'bot');input.disabled=false;input.focus();
+    try{const reply=await answer(clean);typing.remove();add(reply,'bot');history.push({role:'user',content:clean},{role:'assistant',content:reply});history=history.slice(-24);saveSession();}
+    catch(error){typing.remove();add(error.status===429?aiCopy[requestLang].limit:aiCopy[requestLang].error,'bot');}
+    finally{busy=false;input.disabled=false;form.querySelector('button')?.removeAttribute('disabled');renderModes();input.focus();}
   }
   function setOpen(open){chat.classList.toggle('open',open);chat.setAttribute('aria-hidden',String(!open));toggle.setAttribute('aria-expanded',String(open));if(open){applyUi();window.setTimeout(()=>input.focus(),180);}}
   toggle.addEventListener('click',()=>setOpen(!chat.classList.contains('open')));
@@ -1309,6 +1302,7 @@ document.addEventListener('DOMContentLoaded', function () {
   whatsapp.addEventListener('click',()=>{const text=['Alo Solar Energy - AI Chat',...transcript].join('\n');openTrustedWhatsApp('https://wa.me/9647764400440?text='+encodeURIComponent(text));});
   document.querySelectorAll('.lang-btn').forEach(btn=>btn.addEventListener('click',()=>window.setTimeout(applyUi,0)));
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&chat.classList.contains('open'))setOpen(false);});
+  history.forEach(m=>add(m.content,m.role==='user'?'user':'bot'));
   applyUi();
 })();
 </script>
