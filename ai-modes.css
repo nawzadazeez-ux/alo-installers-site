@@ -1,0 +1,5 @@
+.ai-modes{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#eef2ef;border-bottom:1px solid #dce4df;flex-shrink:0}
+.ai-modes button{font:inherit;font-size:12px;border:1px solid #b7c5bc;border-radius:9px;padding:7px 9px;background:white;color:#173623;cursor:pointer;min-height:36px}
+.ai-modes button[aria-pressed=true]{background:#163c28;color:white;border-color:#163c28}
+.ai-modes button:focus-visible{outline:2px solid #a57c16;outline-offset:2px}
+.ai-modes button:disabled,.ai-send:disabled{opacity:.55;cursor:wait}
