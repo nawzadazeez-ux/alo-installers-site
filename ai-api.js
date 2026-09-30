@@ -39,7 +39,8 @@ CUSTOMER CALCULATOR SELECTION (unverified, may be defaults): ${JSON.stringify(ca
     if(!upstream.ok){
       const details=await upstream.json().catch(()=>null);
       const providerCode=details?.error?.code;
-      const code=providerCode==='insufficient_quota'?'quota_exceeded':upstream.status===401?'invalid_key':providerCode==='model_not_found'?'model_unavailable':upstream.status===403?'access_denied':upstream.status===429?'rate_limited':'unavailable';
+      const billingCodes=['credit_balance_exhausted','organization_usage_limit_exceeded','organization_spend_limit_exceeded','project_spend_limit_exceeded'];
+      const code=billingCodes.includes(providerCode)?providerCode:providerCode==='insufficient_quota'||details?.error?.type==='insufficient_quota'?'quota_exceeded':upstream.status===401?'invalid_key':providerCode==='model_not_found'?'model_unavailable':upstream.status===403?'access_denied':upstream.status===429?'rate_limited':'unavailable';
       return json({error:'AI service unavailable',code},502);
     }
     const answer=outputText(await upstream.json()).trim();
