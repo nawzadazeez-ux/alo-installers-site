@@ -36,7 +36,12 @@ CUSTOMER CALCULATOR SELECTION (unverified, may be defaults): ${JSON.stringify(ca
     const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),45000);
     let upstream;
     try{upstream=await fetch('https://api.openai.com/v1/responses',{method:'POST',signal:controller.signal,headers:{Authorization:`Bearer ${env.OPENAI_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-5-mini',instructions,input:[...history,{role:'user',content:body.message.trim()}],max_output_tokens:1800,store:false})})}finally{clearTimeout(timeout)}
-    if(!upstream.ok)return json({error:'AI service unavailable',code:'unavailable'},502);
+    if(!upstream.ok){
+      const details=await upstream.json().catch(()=>null);
+      const providerCode=details?.error?.code;
+      const code=providerCode==='insufficient_quota'?'quota_exceeded':upstream.status===401?'invalid_key':providerCode==='model_not_found'?'model_unavailable':upstream.status===403?'access_denied':upstream.status===429?'rate_limited':'unavailable';
+      return json({error:'AI service unavailable',code},502);
+    }
     const answer=outputText(await upstream.json()).trim();
     if(!answer)return json({error:'AI returned no answer',code:'unavailable'},502);
     return json({answer,mode});
