@@ -1,4 +1,4 @@
-const VERSION = 'alo-pwa-v9';
+const VERSION = 'alo-pwa-v10';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
@@ -49,24 +49,18 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Scripts/styles: cached instantly, refreshed in background.
+  // Scripts/styles: network first so new deployments appear immediately; cache only as fallback.
   if (['script', 'style'].includes(request.destination)) {
-    event.respondWith(
-      caches.open(STATIC_CACHE).then(async cache => {
-        const cached = await cache.match(request);
-        const refresh = fetch(request).then(response => {
-          if (response.ok) cache.put(request, response.clone());
-          return response;
-        }).catch(() => null);
-
-        if (cached) {
-          event.waitUntil(refresh);
-          return cached;
-        }
-
-        return (await refresh) || Response.error();
-      })
-    );
+    event.respondWith((async () => {
+      const cache = await caches.open(STATIC_CACHE);
+      try {
+        const response = await fetch(request, { cache: 'no-store' });
+        if (response.ok) cache.put(request, response.clone());
+        return response;
+      } catch {
+        return (await cache.match(request)) || Response.error();
+      }
+    })());
     return;
   }
 
