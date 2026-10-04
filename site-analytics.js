@@ -15,11 +15,11 @@
       style.id='alo-hero-live-style';
       style.textContent=`
         .hero-card{background-image:none!important;animation:none!important;min-height:0!important}
-        .hero-card>img{opacity:1!important;visibility:visible!important;display:block!important;width:100%!important;min-height:0!important;aspect-ratio:1.089/1!important;object-fit:cover!important;border-radius:inherit!important}
+        .hero-card>img:not(.alo-hero-logo){opacity:1!important;visibility:visible!important;display:block!important;width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:1.089/1!important;object-fit:cover!important;border-radius:inherit!important}
         .hero-card:before,.hero-card:after{display:none!important;content:none!important;animation:none!important}
         .hero-card>[data-i18n="heroCaption"]{display:none!important}
-        .alo-hero-logo{position:absolute;z-index:8;left:5.6%;top:4.8%;width:20%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.38));pointer-events:none}
-        @media(max-width:850px){.alo-hero-logo{left:5%;top:4.5%;width:23%}}
+        .hero-card>.alo-hero-logo{position:absolute!important;z-index:8!important;left:5.6%!important;top:4.8%!important;width:20%!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;object-fit:contain!important;opacity:1!important;visibility:visible!important;filter:drop-shadow(0 4px 12px rgba(0,0,0,.38));pointer-events:none}
+        @media(max-width:850px){.hero-card>.alo-hero-logo{left:5%!important;top:4.5%!important;width:23%!important}}
       `;
       document.head.appendChild(style);
     }
