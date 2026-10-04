@@ -7,23 +7,30 @@
 
   const render=()=>{
     const card=document.querySelector('.hero-card');
-    const img=card?.querySelector('img:not(.alo-hero-logo)');
     if(!card) return false;
 
-    card.querySelector('.alo-energy-particles')?.remove();
-    card.querySelector('.alo-hero-logo')?.remove();
+    // Remove any old dashboard/animation remnants.
+    card.querySelectorAll('.alo-energy-particles,.alo-hero-logo,.alo-hero-slogan').forEach(el=>el.remove());
 
-    if(img){
-      img.removeAttribute('src');
-      img.alt='';
-      img.className='alo-hero-placeholder';
+    // Hide the old embedded hero image if it exists.
+    const oldImg=card.querySelector('img:not(.alo-hero-logo)');
+    if(oldImg){
+      oldImg.removeAttribute('src');
+      oldImg.alt='';
+      oldImg.className='alo-hero-placeholder';
     }
 
     const logo=document.createElement('img');
     logo.className='alo-hero-logo';
-    logo.src='/alo-logo.png?v=20261004-logoonly1';
+    logo.src='/alo-logo.png?v=20261004-logoonly2';
     logo.alt='Alo Solar Energy';
+
+    const slogan=document.createElement('div');
+    slogan.className='alo-hero-slogan';
+    slogan.innerHTML='Your Power <span>•</span> Your Future';
+
     card.appendChild(logo);
+    card.appendChild(slogan);
     return true;
   };
 
