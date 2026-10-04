@@ -7,152 +7,21 @@
 
   const render=()=>{
     const card=document.querySelector('.hero-card');
-    const img=card?.querySelector('img');
+    const img=card?.querySelector('img:not(.alo-hero-logo)');
     if(!card||!img) return false;
 
-    if(!document.getElementById('alo-hero-live-style')){
-      const style=document.createElement('style');
-      style.id='alo-hero-live-style';
-      style.textContent=`
-        .hero-card{background-image:none!important;animation:none!important;min-height:0!important}
-        .hero-card>img:not(.alo-hero-logo){opacity:1!important;visibility:visible!important;display:block!important;width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:1.089/1!important;object-fit:cover!important;border-radius:inherit!important}
-        .hero-card:before,.hero-card:after{display:none!important;content:none!important;animation:none!important}
-        .hero-card>[data-i18n="heroCaption"]{display:none!important}
-        .hero-card>.alo-hero-logo{position:absolute!important;z-index:8!important;left:5.6%!important;top:4.8%!important;width:20%!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;object-fit:contain!important;opacity:1!important;visibility:visible!important;filter:drop-shadow(0 4px 12px rgba(0,0,0,.38));pointer-events:none}
-        @media(max-width:850px){.hero-card>.alo-hero-logo{left:5%!important;top:4.5%!important;width:23%!important}}
-      `;
-      document.head.appendChild(style);
-    }
+    img.src='/hero-live.svg?v=20261004-3';
+    img.alt='Alo Solar Energy smart solar home dashboard with animated energy flow';
+    img.classList.add('alo-live-hero-image');
 
     let logo=card.querySelector('.alo-hero-logo');
     if(!logo){
       logo=document.createElement('img');
       logo.className='alo-hero-logo';
-      logo.src='/alo-logo.png?v=4';
+      logo.src='/alo-logo.png?v=20261004-3';
       logo.alt='Alo Solar Energy';
       card.appendChild(logo);
     }
-
-    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1309 1202">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop stop-color="#05251b"/><stop offset=".58" stop-color="#0a3525"/><stop offset="1" stop-color="#102817"/>
-        </linearGradient>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop stop-color="#0b3e35"/><stop offset=".55" stop-color="#255347"/><stop offset="1" stop-color="#80684d"/>
-        </linearGradient>
-        <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
-          <stop stop-color="#0b1e18" stop-opacity=".92"/><stop offset="1" stop-color="#163629" stop-opacity=".82"/>
-        </linearGradient>
-        <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
-          <stop stop-color="#0f4770"/><stop offset=".52" stop-color="#0e3156"/><stop offset="1" stop-color="#071d36"/>
-        </linearGradient>
-        <linearGradient id="house" x1="0" y1="0" x2="1" y2="1">
-          <stop stop-color="#f1ede1"/><stop offset="1" stop-color="#cfc5ad"/>
-        </linearGradient>
-        <linearGradient id="lawn" x1="0" y1="0" x2="0" y2="1">
-          <stop stop-color="#28451f"/><stop offset="1" stop-color="#102713"/>
-        </linearGradient>
-        <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".38"/></filter>
-        <filter id="glow"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="soft"><feGaussianBlur stdDeviation="28"/></filter>
-      </defs>
-
-      <rect width="1309" height="1202" fill="url(#bg)"/>
-      <rect x="53" y="52" width="1203" height="1020" rx="38" fill="url(#sky)" stroke="#53d88f" stroke-opacity=".24" stroke-width="2"/>
-      <ellipse cx="1030" cy="260" rx="270" ry="175" fill="#ffd988" opacity=".07" filter="url(#soft)"/>
-      <path d="M54 820 C260 735 445 782 633 748 C860 708 1060 748 1255 694 L1255 1071 L54 1071Z" fill="url(#lawn)"/>
-
-      <g opacity=".72">
-        <path d="M980 590 L1051 522 L1120 595 L1185 548 L1255 610 L1255 700 L980 700Z" fill="#17352c"/>
-        <path d="M1020 636 L1094 577 L1155 623 L1210 590 L1255 628" fill="none" stroke="#27483e" stroke-width="11"/>
-      </g>
-
-      <g filter="url(#shadow)">
-        <path d="M195 505 L560 268 L893 482 L893 811 L195 811Z" fill="url(#house)"/>
-        <path d="M151 503 L546 238 L947 500 L866 500 L548 309 L234 510Z" fill="#253831"/>
-        <path d="M221 458 L547 276 L836 454 L764 491 L548 359 L293 501Z" fill="#293a33"/>
-        <g transform="translate(270 326) skewX(-17)">
-          <rect width="154" height="116" rx="4" fill="url(#panel)" stroke="#8db7c9" stroke-width="2"/>
-          <rect x="162" width="154" height="116" rx="4" fill="url(#panel)" stroke="#8db7c9" stroke-width="2"/>
-          <rect x="324" width="154" height="116" rx="4" fill="url(#panel)" stroke="#8db7c9" stroke-width="2"/>
-          <rect y="124" width="154" height="116" rx="4" fill="url(#panel)" stroke="#8db7c9" stroke-width="2"/>
-          <rect x="162" y="124" width="154" height="116" rx="4" fill="url(#panel)" stroke="#8db7c9" stroke-width="2"/>
-          <rect x="324" y="124" width="154" height="116" rx="4" fill="url(#panel)" stroke="#8db7c9" stroke-width="2"/>
-          <g stroke="#4e7693" opacity=".75">
-            <path d="M38 0V240M77 0V240M116 0V240M200 0V240M239 0V240M278 0V240M362 0V240M401 0V240M440 0V240"/>
-            <path d="M0 38H478M0 78H478M0 162H478M0 202H478"/>
-          </g>
-        </g>
-
-        <rect x="254" y="574" width="262" height="226" rx="8" fill="#7f6847"/>
-        <rect x="273" y="593" width="224" height="188" fill="#c88d4a" opacity=".62"/>
-        <rect x="309" y="612" width="65" height="150" fill="#102720"/>
-        <rect x="391" y="612" width="82" height="150" fill="#152f27"/>
-        <rect x="561" y="527" width="264" height="273" rx="8" fill="#ece7da"/>
-        <rect x="590" y="556" width="206" height="220" fill="#172b24"/>
-        <rect x="606" y="572" width="174" height="188" fill="#f0b263" opacity=".62"/>
-
-        <rect x="771" y="575" width="88" height="127" rx="14" fill="#e8ece7" stroke="#cfd7d1"/>
-        <rect x="799" y="607" width="32" height="34" rx="5" fill="#14271f"/>
-        <text x="815" y="597" text-anchor="middle" fill="#2458ce" font-family="Arial,sans-serif" font-size="15" font-weight="700">Deye</text>
-
-        <rect x="758" y="717" width="108" height="122" rx="14" fill="#e7eae4" stroke="#cfd3ca"/>
-        <g fill="#1e2825"><circle cx="812" cy="748" r="6"/><circle cx="800" cy="759" r="6"/><circle cx="824" cy="759" r="6"/><circle cx="812" cy="770" r="6"/></g>
-        <text x="812" y="804" text-anchor="middle" fill="#1c211f" font-family="Arial,sans-serif" font-size="11" font-weight="800">PYLONTECH</text>
-      </g>
-
-      <g fill="none" stroke="#38f88b" stroke-linecap="round" filter="url(#glow)">
-        <path id="flowSolar" d="M597 401 C678 425 724 475 768 558" stroke-width="7" opacity=".85"/>
-        <path id="flowHome" d="M818 570 C864 531 902 510 948 511" stroke-width="7" opacity=".85"/>
-        <path id="flowBattery" d="M814 683 C814 706 813 713 812 720" stroke-width="7" opacity=".85"/>
-        <path id="flowGrid" d="M860 681 C953 694 1023 692 1087 689" stroke-width="7" opacity=".85"/>
-      </g>
-      <g fill="none" stroke="#d8ffe7" stroke-linecap="round" stroke-dasharray="4 30" filter="url(#glow)">
-        <path d="M597 401 C678 425 724 475 768 558" stroke-width="8"><animate attributeName="stroke-dashoffset" values="0;-68" dur="1.2s" repeatCount="indefinite"/></path>
-        <path d="M818 570 C864 531 902 510 948 511" stroke-width="8"><animate attributeName="stroke-dashoffset" values="0;-68" dur="1.05s" repeatCount="indefinite"/></path>
-        <path d="M814 683 C814 706 813 713 812 720" stroke-width="8"><animate attributeName="stroke-dashoffset" values="0;-68" dur=".9s" repeatCount="indefinite"/></path>
-        <path d="M860 681 C953 694 1023 692 1087 689" stroke-width="8"><animate attributeName="stroke-dashoffset" values="0;-68" dur="1.25s" repeatCount="indefinite"/></path>
-      </g>
-
-      <g filter="url(#shadow)">
-        <rect x="86" y="200" width="350" height="147" rx="25" fill="url(#glass)" stroke="#64eaa2" stroke-opacity=".52"/>
-        <circle cx="141" cy="250" r="18" fill="#ffe774"/>
-        <g stroke="#ffe774" stroke-width="6" stroke-linecap="round"><path d="M141 215v-15M141 300v-15M106 250H91M191 250h-15M116 225l-11-11M177 286l-11-11M116 275l-11 11M177 214l-11 11"/></g>
-        <text x="205" y="244" fill="#b8c9c0" font-family="Arial,sans-serif" font-size="19" font-weight="700">SOLAR NOW</text>
-        <text x="205" y="292" fill="#fff" font-family="Arial,sans-serif" font-size="43" font-weight="800">8.7 kW</text>
-        <text x="205" y="321" fill="#54f99b" font-family="Arial,sans-serif" font-size="19">↗ Producing</text>
-
-        <rect x="920" y="331" width="300" height="124" rx="25" fill="url(#glass)" stroke="#64eaa2" stroke-opacity=".52"/>
-        <path d="M961 383 l34-29 34 29 v38 h-68Z" fill="none" stroke="#65f6a3" stroke-width="6" stroke-linejoin="round"/>
-        <text x="1050" y="373" fill="#b8c9c0" font-family="Arial,sans-serif" font-size="18" font-weight="700">HOME LOAD</text>
-        <text x="1050" y="417" fill="#fff" font-family="Arial,sans-serif" font-size="38" font-weight="800">2.4 kW</text>
-
-        <rect x="470" y="771" width="250" height="127" rx="25" fill="url(#glass)" stroke="#64eaa2" stroke-opacity=".52"/>
-        <rect x="503" y="806" width="32" height="50" rx="5" fill="none" stroke="#65f6a3" stroke-width="4"/><rect x="513" y="799" width="12" height="8" rx="2" fill="#65f6a3"/>
-        <text x="557" y="814" fill="#b8c9c0" font-family="Arial,sans-serif" font-size="17" font-weight="700">BATTERY</text>
-        <text x="557" y="854" fill="#fff" font-family="Arial,sans-serif" font-size="37" font-weight="800">86%</text>
-        <text x="557" y="880" fill="#54f99b" font-family="Arial,sans-serif" font-size="16">⚡ Charging</text>
-
-        <rect x="982" y="654" width="240" height="122" rx="25" fill="url(#glass)" stroke="#64eaa2" stroke-opacity=".52"/>
-        <path d="M1022 685 l-22 67M1022 685l22 67M1006 713h32M1001 730h42" stroke="#fff" stroke-width="4" fill="none"/>
-        <text x="1064" y="699" fill="#b8c9c0" font-family="Arial,sans-serif" font-size="17" font-weight="700">GRID</text>
-        <text x="1064" y="740" fill="#fff" font-family="Arial,sans-serif" font-size="36" font-weight="800">0.3 kW</text>
-        <text x="1064" y="766" fill="#54f99b" font-family="Arial,sans-serif" font-size="15">⚡ Exporting</text>
-      </g>
-
-      <g>
-        <rect x="824" y="86" width="360" height="66" rx="33" fill="#061a13" stroke="#37ee8b" stroke-opacity=".7"/>
-        <circle cx="857" cy="119" r="7" fill="#50f59b"/>
-        <text x="883" y="128" fill="#70f5ae" font-family="Arial,sans-serif" font-size="21" font-weight="800" letter-spacing="2">LIVE • ENERGY FLOW</text>
-      </g>
-
-      <text x="654" y="1019" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="40" font-weight="800">Your Power <tspan fill="#45f294">• Your Future</tspan></text>
-      <rect x="408" y="1037" width="493" height="3" rx="2" fill="#54f99b" opacity=".55"/>
-    </svg>`;
-
-    img.src='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
-    img.alt='Alo Solar Energy smart solar home dashboard with animated energy flow';
     return true;
   };
 
