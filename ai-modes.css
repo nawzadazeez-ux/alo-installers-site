@@ -26,11 +26,11 @@
  opacity:1!important;
  visibility:visible!important;
  width:100%!important;
- height:auto!important;
- min-height:0!important;
+ height:100%!important;
+ min-height:100%!important;
  max-height:none!important;
- aspect-ratio:1309/1202!important;
- object-fit:contain!important;
+ aspect-ratio:auto!important;
+ object-fit:cover!important;
  object-position:center!important;
  margin:0!important;
  padding:0!important;
@@ -50,7 +50,7 @@
 .hero-card:before,.hero-card:after{display:none!important;content:none!important;animation:none!important}
 @media(max-width:850px){
  .hero-card{width:100%!important;max-width:560px!important;margin-inline:auto!important;border-radius:20px!important}
- .hero-card>img.alo-live-hero-image{max-height:none!important;border-radius:20px!important}
+ .hero-card>img.alo-live-hero-image{height:100%!important;min-height:100%!important;max-height:none!important;object-fit:cover!important;border-radius:20px!important}
 }
 @media(prefers-reduced-motion:reduce){
  .hero-card>.alo-energy-particles{display:none!important}
