@@ -10,6 +10,7 @@
  overflow:hidden!important;
  isolation:isolate;
  min-height:0!important;
+ padding:0!important;
  background:#0a2419!important;
  background-image:none!important;
  animation:none!important;
@@ -22,9 +23,11 @@
  width:100%!important;
  height:auto!important;
  min-height:0!important;
+ max-height:none!important;
  aspect-ratio:1309/1202!important;
  object-fit:cover!important;
  border-radius:inherit!important;
+ margin:0!important;
 }
 .hero-card>.alo-hero-logo{
  position:absolute!important;
