@@ -20,7 +20,7 @@
     const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');
     overlay.setAttribute('class','alo-energy-particles');
     overlay.setAttribute('viewBox','0 0 1309 1202');
-    overlay.setAttribute('preserveAspectRatio','xMidYMid meet');
+    overlay.setAttribute('preserveAspectRatio','xMidYMid slice');
     overlay.setAttribute('aria-hidden','true');
     overlay.innerHTML=`
       <defs>
