@@ -26,6 +26,7 @@
  opacity:1!important;
  visibility:visible!important;
  width:100%!important;
+ max-width:none!important;
  height:100%!important;
  min-height:100%!important;
  max-height:none!important;
