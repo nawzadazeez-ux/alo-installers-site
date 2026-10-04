@@ -8,15 +8,20 @@
 .hero-card{
  position:relative!important;
  overflow:hidden!important;
- isolation:isolate;
- min-height:0!important;
+ isolation:isolate!important;
  padding:0!important;
- background:#0a2419!important;
+ min-height:0!important;
+ background:transparent!important;
  background-image:none!important;
+ border:0!important;
+ border-radius:26px!important;
+ box-shadow:0 28px 80px rgba(0,0,0,.28)!important;
+ backdrop-filter:none!important;
  animation:none!important;
- box-shadow:0 35px 90px rgba(0,0,0,.38),0 0 0 1px rgba(66,245,141,.05) inset!important;
 }
 .hero-card>img.alo-live-hero-image{
+ position:relative!important;
+ z-index:1!important;
  display:block!important;
  opacity:1!important;
  visibility:visible!important;
@@ -25,26 +30,28 @@
  min-height:0!important;
  max-height:none!important;
  aspect-ratio:1309/1202!important;
- object-fit:cover!important;
- border-radius:inherit!important;
- margin:0!important;
-}
-.hero-card>.alo-hero-logo{
- position:absolute!important;
- z-index:8!important;
- left:5.6%!important;
- top:4.8%!important;
- width:20%!important;
- height:auto!important;
- min-height:0!important;
  object-fit:contain!important;
- opacity:1!important;
- visibility:visible!important;
- filter:drop-shadow(0 4px 12px rgba(0,0,0,.38));
- pointer-events:none;
+ object-position:center!important;
+ margin:0!important;
+ padding:0!important;
+ border:0!important;
+ border-radius:26px!important;
+}
+.hero-card>.alo-energy-particles{
+ position:absolute!important;
+ z-index:3!important;
+ inset:0!important;
+ width:100%!important;
+ height:100%!important;
+ display:block!important;
+ pointer-events:none!important;
 }
 .hero-card>[data-i18n="heroCaption"]{display:none!important}
 .hero-card:before,.hero-card:after{display:none!important;content:none!important;animation:none!important}
 @media(max-width:850px){
- .hero-card>.alo-hero-logo{left:5%!important;top:4.5%!important;width:23%!important}
+ .hero-card{width:100%!important;max-width:560px!important;margin-inline:auto!important;border-radius:20px!important}
+ .hero-card>img.alo-live-hero-image{max-height:none!important;border-radius:20px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero-card>.alo-energy-particles{display:none!important}
 }
