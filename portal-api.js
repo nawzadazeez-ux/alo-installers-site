@@ -204,6 +204,17 @@ export async function onRequest(context){
    if(u.status!=='approved')return json({valid:false,status:u.status,error:'This installer account is not currently active.'},200);
    return json({valid:true,installer:{memberId:`ALO-${String(u.id).padStart(6,'0')}`,fullName:u.full_name,business:u.business||'',city:u.city||'',approvedAt:u.approved_at||''}},200,{'cache-control':'no-store'});
   }
+  if(path==='/mobile-admin/login'&&method==='POST'){
+   if(!env.ADMIN_USERNAME||!env.ADMIN_PASSWORD)return json({error:'Admin credentials are not configured.'},500);
+   if(!await throttle(env,request,'mobile-admin'))return json({error:'Too many attempts. Try again later.'},429);
+   const d=await body(request),u=clean(d?.username,80),p=String(d?.password||'');
+   const userOK=(await sha256(u))===(await sha256(env.ADMIN_USERNAME));
+   const passOK=(await sha256(p))===(await sha256(env.ADMIN_PASSWORD));
+   if(!userOK||!passOK)return json({error:'Incorrect admin credentials.'},401);
+   await clearThrottle(env,request,'mobile-admin');
+   const token=await issueSession(env,'admin',null);
+   return json({ok:true,mobile:true},200,{'set-cookie':setCookie('alo_admin_session',token,604800)});
+  }
   if(path==='/admin/login'&&method==='POST'){
    if(!env.ADMIN_USERNAME||!env.ADMIN_PASSWORD)return json({error:'Admin credentials are not configured.'},500);if(!await throttle(env,request,'admin'))return json({error:'Too many attempts. Try again later.'},429);
    const d=await body(request),u=clean(d?.username,80),p=String(d?.password||'');const userOK=(await sha256(u))===(await sha256(env.ADMIN_USERNAME)),passOK=(await sha256(p))===(await sha256(env.ADMIN_PASSWORD));if(!userOK||!passOK)return json({error:'Incorrect admin credentials.'},401);
