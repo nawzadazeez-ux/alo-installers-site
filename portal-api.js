@@ -173,6 +173,7 @@ export async function onRequest(context){
   await ensurePortalCore(env);
   await ensureEvCatalog(env);
   if(['/events','/inspection','/admin/analytics'].includes(path))return await analyticsRoute(env,request,path,method);
+  if(path==='/app/announcements'||path==='/admin/app-announcements')return await appAnnouncementsRoute(env,request,path,method);
   if(path==='/announcements'||path==='/admin/announcements')return await announcementsRoute(env,request,path,method);
   if(path==='/ev/products'&&method==='GET'){const {results}=await env.DB.prepare('SELECT id,brand,name,type,power_kw,phase,spec,warranty,price,show_price FROM ev_products WHERE active=1 ORDER BY sort_order,id').all();return json({products:results},200,{'cache-control':'no-store'});}
   if(path==='/register'&&method==='POST'){
@@ -265,6 +266,23 @@ export async function onRequest(context){
   if(path==='/admin/calculator/settings'&&method==='POST'){if(!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);await ensureCalculator(env);const d=await body(request);if(!d||typeof d.settings!=='object')return json({error:'Invalid settings.'},400);const allowed=Object.keys(SERVICE_SEED),entries=Object.entries(d.settings).filter(([k,v])=>allowed.includes(k)&&Number.isFinite(Number(v))&&Number(v)>=0);if(entries.length!==allowed.length)return json({error:'Complete all service prices.'},400);await env.DB.batch(entries.map(([k,v])=>env.DB.prepare("INSERT INTO calculator_settings(key,value,updated_at) VALUES(?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=datetime('now')").bind(k,Number(v))));return json({ok:true})}
   return json({error:'Not found.'},404);
  }catch(e){console.error(e);return json({error:'Server error. Please try again.'},500)}
+}
+
+
+async function appAnnouncementsRoute(env,request,path,method){
+ const admin=path==='/admin/app-announcements';
+ if(admin&&!await sessionUser(env,request,'admin'))return json({error:'Unauthorized'},401);
+ if((!admin&&method!=='GET')||(admin&&!['GET','POST'].includes(method)))return json({error:'Method not allowed'},405);
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS app_announcements (id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,message TEXT NOT NULL,kind TEXT NOT NULL DEFAULT 'general',audience TEXT NOT NULL DEFAULT 'users',active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
+ if(method==='GET'){
+  const {results}=await env.DB.prepare(admin?'SELECT * FROM app_announcements ORDER BY id DESC LIMIT 200':"SELECT id,title,message,kind,audience,created_at,updated_at FROM app_announcements WHERE active=1 AND audience IN ('users','all') ORDER BY id DESC LIMIT 50").all();
+  return json({announcements:results});
+ }
+ const d=await body(request);if(!d)return json({error:'Invalid request'},400);
+ const title=clean(d.title,120),message=clean(d.message,2000),kind=clean(d.kind||'general',20),audience=clean(d.audience||'users',20);
+ if(!title||!message||!['general','price','product','offer'].includes(kind)||!['users','all'].includes(audience)||typeof d.active!=='boolean')return json({error:'Invalid notification data.'},400);
+ await env.DB.prepare('INSERT INTO app_announcements(title,message,kind,audience,active) VALUES(?,?,?,?,?)').bind(title,message,kind,audience,d.active?1:0).run();
+ return json({ok:true},201);
 }
 
 async function announcementsRoute(env,request,path,method){
