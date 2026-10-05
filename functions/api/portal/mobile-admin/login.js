@@ -82,6 +82,6 @@ export async function onRequestPost({request,env}){
   }
   await clearThrottle(env,request);await logEvent(env,request,username,twoFactorSecret?'mobile_success_2fa':'mobile_success');
   const token=await issueSession(env);
-  return json({ok:true,twoFactorEnabled:Boolean(twoFactorSecret)},200,{'set-cookie':setCookie('alo_admin_session',token,604800)});
+  return json({ok:true,twoFactorEnabled:Boolean(twoFactorSecret),sessionToken:token},200,{'set-cookie':setCookie('alo_admin_session',token,604800)});
  }catch(e){console.error('Mobile admin login failed',e);return json({error:'Server error. Please try again.'},500)}
 }
