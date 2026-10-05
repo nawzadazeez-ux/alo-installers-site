@@ -198,8 +198,16 @@ export async function onRequest(context){
   if(path==='/rewards'&&method==='GET'){const u=await sessionUser(env,request,'installer');if(!u||u.status!=='approved')return json({error:'Unauthorized'},401);const {results:purchases}=await env.DB.prepare("SELECT id,amount,note,invoice_number,purchased_at FROM installer_purchases WHERE installer_id=? AND purchased_at>=datetime('now','-2 months') ORDER BY purchased_at DESC,id DESC").bind(u.user_id).all();const total=purchases.reduce((sum,x)=>sum+Number(x.amount||0),0),target=10000,rate=.02;return json({periodMonths:2,target,rate,total,remaining:Math.max(0,target-total),progress:Math.min(100,total/target*100),eligible:total>=target,cashback:total>=target?total*rate:0,purchases})}
   if(path==='/calculator/config'&&method==='GET')return json(await calculatorConfig(env),200,{'cache-control':'no-store, no-cache, must-revalidate','cdn-cache-control':'no-store'});
   if(path==='/verify'&&method==='GET'){
-   const code=clean(new URL(request.url).searchParams.get('code'),80);if(!/^[a-f0-9]{32}$/.test(code))return json({valid:false,error:'Invalid verification code.'},400);
-   const u=await env.DB.prepare('SELECT id,full_name,business,city,status,approved_at FROM installers WHERE verification_code=?').bind(code).first();
+   const raw=clean(new URL(request.url).searchParams.get('code'),80);
+   let u=null;
+   if(/^[a-f0-9]{32}$/i.test(raw)){
+    u=await env.DB.prepare('SELECT id,full_name,business,city,status,approved_at FROM installers WHERE verification_code=?').bind(raw.toLowerCase()).first();
+   }else{
+    const member=/^ALO-(\\d{6})$/i.exec(raw);
+    if(!member)return json({valid:false,error:'Invalid verification code or member ID.'},400);
+    const id=Number(member[1]);
+    u=await env.DB.prepare('SELECT id,full_name,business,city,status,approved_at FROM installers WHERE id=?').bind(id).first();
+   }
    if(!u)return json({valid:false,error:'Installer record not found.'},404);
    if(u.status!=='approved')return json({valid:false,status:u.status,error:'This installer account is not currently active.'},200);
    return json({valid:true,installer:{memberId:`ALO-${String(u.id).padStart(6,'0')}`,fullName:u.full_name,business:u.business||'',city:u.city||'',approvedAt:u.approved_at||''}},200,{'cache-control':'no-store'});
