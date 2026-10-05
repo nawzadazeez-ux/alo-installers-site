@@ -198,14 +198,24 @@ export async function onRequest(context){
   if(path==='/rewards'&&method==='GET'){const u=await sessionUser(env,request,'installer');if(!u||u.status!=='approved')return json({error:'Unauthorized'},401);const {results:purchases}=await env.DB.prepare("SELECT id,amount,note,invoice_number,purchased_at FROM installer_purchases WHERE installer_id=? AND purchased_at>=datetime('now','-2 months') ORDER BY purchased_at DESC,id DESC").bind(u.user_id).all();const total=purchases.reduce((sum,x)=>sum+Number(x.amount||0),0),target=10000,rate=.02;return json({periodMonths:2,target,rate,total,remaining:Math.max(0,target-total),progress:Math.min(100,total/target*100),eligible:total>=target,cashback:total>=target?total*rate:0,purchases})}
   if(path==='/calculator/config'&&method==='GET')return json(await calculatorConfig(env),200,{'cache-control':'no-store, no-cache, must-revalidate','cdn-cache-control':'no-store'});
   if(path==='/verify'&&method==='GET'){
-   const raw=clean(new URL(request.url).searchParams.get('code'),80);
+   const original=clean(new URL(request.url).searchParams.get('code'),120);
+   const digitMap={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+   const normalized=original
+    .replace(/[٠-٩۰-۹]/g,ch=>digitMap[ch]||ch)
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'')
+    .trim();
    let u=null;
-   if(/^[a-f0-9]{32}$/i.test(raw)){
-    u=await env.DB.prepare('SELECT id,full_name,business,city,status,approved_at FROM installers WHERE verification_code=?').bind(raw.toLowerCase()).first();
+   const hexCode=normalized.match(/[a-f0-9]{32}/i)?.[0];
+   if(hexCode){
+    u=await env.DB.prepare('SELECT id,full_name,business,city,status,approved_at FROM installers WHERE lower(verification_code)=?').bind(hexCode.toLowerCase()).first();
    }else{
-    const member=/^ALO-(\\d{6})$/i.exec(raw);
-    if(!member)return json({valid:false,error:'Invalid verification code or member ID.'},400);
-    const id=Number(member[1]);
+    const compact=normalized.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const member=compact.match(/^ALO0*(\d{1,9})$/);
+    const plain=compact.match(/^(\d{1,9})$/);
+    const idText=member?.[1]||plain?.[1]||'';
+    if(!idText)return json({valid:false,error:'Invalid verification code or member ID.'},400);
+    const id=Number(idText);
+    if(!Number.isSafeInteger(id)||id<=0)return json({valid:false,error:'Invalid verification code or member ID.'},400);
     u=await env.DB.prepare('SELECT id,full_name,business,city,status,approved_at FROM installers WHERE id=?').bind(id).first();
    }
    if(!u)return json({valid:false,error:'Installer record not found.'},404);
