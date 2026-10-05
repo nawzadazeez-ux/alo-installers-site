@@ -6,7 +6,9 @@ const randomHex=n=>{const b=new Uint8Array(n);crypto.getRandomValues(b);return h
 const clean=(v,max=300)=>String(v||'').trim().replace(/[<>]/g,'').slice(0,max);
 function cookie(request,name){const raw=request.headers.get('cookie')||'';for(const part of raw.split(';')){const [k,...v]=part.trim().split('=');if(k===name)return decodeURIComponent(v.join('='))}return ''}
 async function adminSession(env,request){
- const token=cookie(request,'alo_admin_session');if(!token)return null;
+ const auth=String(request.headers.get('authorization')||'');
+ const bearer=auth.toLowerCase().startsWith('bearer ')?auth.slice(7).trim():'';
+ const token=bearer||cookie(request,'alo_admin_session');if(!token)return null;
  const hash=await sha256(token);
  return await env.DB.prepare("SELECT id FROM sessions WHERE token_hash=? AND role='admin' AND expires_at>datetime('now')").bind(hash).first();
 }
