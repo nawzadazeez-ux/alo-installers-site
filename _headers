@@ -57,3 +57,16 @@
 /*.pdf
   Content-Type: application/pdf
   Cache-Control: public, max-age=604800, immutable
+
+
+/
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/prices.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/api/portal/calculator/config
+  Cache-Control: no-store, no-cache, must-revalidate
