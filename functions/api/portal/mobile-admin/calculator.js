@@ -1,5 +1,6 @@
 async function ensure(db){
   await db.prepare(`CREATE TABLE IF NOT EXISTS app_calculator_config (id INTEGER PRIMARY KEY CHECK(id=1), config_json TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS app_calculator_history (id INTEGER PRIMARY KEY AUTOINCREMENT, item_count INTEGER NOT NULL DEFAULT 0, changed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
 }
 async function authorized(request){
   const auth=request.headers.get('authorization')||'';
@@ -34,7 +35,9 @@ export async function onRequestGet({request,env}){
     return json({items:[],settings:{},empty:true});
   }
   try{
-    return json({...JSON.parse(row.config_json),updated_at:row.updated_at});
+    const parsed=JSON.parse(row.config_json);
+    const {results:history}=await env.DB.prepare('SELECT id,item_count,changed_at FROM app_calculator_history ORDER BY id DESC LIMIT 20').all();
+    return json({...parsed,updated_at:row.updated_at,history});
   }catch(_){
     return json({error:'Saved calculator config is invalid.'},500);
   }
@@ -60,6 +63,10 @@ export async function onRequestPost({request,env}){
     settings:Object.fromEntries(Object.entries(settings).map(([k,v])=>[k,Number(v)]))
   };
   await ensure(env.DB);
-  await env.DB.prepare(`INSERT INTO app_calculator_config(id,config_json,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET config_json=excluded.config_json,updated_at=CURRENT_TIMESTAMP`).bind(JSON.stringify(clean)).run();
-  return json({ok:true,...clean});
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO app_calculator_config(id,config_json,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET config_json=excluded.config_json,updated_at=CURRENT_TIMESTAMP`).bind(JSON.stringify(clean)),
+    env.DB.prepare('INSERT INTO app_calculator_history(item_count) VALUES(?)').bind(clean.items.length)
+  ]);
+  const {results:history}=await env.DB.prepare('SELECT id,item_count,changed_at FROM app_calculator_history ORDER BY id DESC LIMIT 20').all();
+  return json({ok:true,...clean,history});
 }
