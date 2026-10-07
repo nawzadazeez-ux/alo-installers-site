@@ -20,7 +20,19 @@ export async function onRequestGet({request,env}){
   if(!env.DB) return json({error:'DB binding is missing.'},500);
   await ensure(env.DB);
   const row=await env.DB.prepare('SELECT config_json, updated_at FROM app_calculator_config WHERE id=1').first();
-  if(!row) return json({items:[],settings:{},empty:true});
+  if(!row){
+    try{
+      const u=new URL(request.url);
+      u.pathname='/api/portal/calculator/config';
+      u.search='';
+      const r=await fetch(u.toString(),{headers:{accept:'application/json'}});
+      if(r.ok){
+        const data=await r.json();
+        return json({...data,empty:true,source:'public-default'});
+      }
+    }catch(_){}
+    return json({items:[],settings:{},empty:true});
+  }
   try{
     return json({...JSON.parse(row.config_json),updated_at:row.updated_at});
   }catch(_){
