@@ -153,61 +153,123 @@ function calculatorItem(item) {
 }
 
 function applyCalculatorConfig(config) {
-  const items = Array.isArray(config.items) ? config.items.filter(item => item && item.active !== false) : [];
+  const raw = Array.isArray(config?.items) ? config.items : [];
+  const items = raw.filter(item => item && item.active !== false);
   const fallback = window.ALO_PRICING;
-  const enabledFor = mode => items.filter(item => item.mode === mode || item.mode === 'both');
-  const advanced = enabledFor('advanced').map(calculatorItem);
-  const easy = enabledFor('easy');
-  const tiers = {};
-  qualityOrder.forEach(quality => {
-    const fallbackTier = fallback.qualityTiers[quality] || { panels: [], batteries: [], inverters: [] };
-    const panels = easy.filter(x => x.quality === quality && x.category === 'panel').map(calculatorItem);
-    const batteries = easy.filter(x => x.quality === quality && x.category === 'battery').map(calculatorItem);
-    const inverters = easy.filter(x => x.quality === quality && x.category === 'inverter').map(calculatorItem);
-    tiers[quality] = {
-      label: ALO_QUALITY_TIERS[quality]?.label || quality,
-      panels: panels.length ? panels : fallbackTier.panels,
-      batteries: batteries.length ? batteries : fallbackTier.batteries,
-      inverters: inverters.length ? inverters : fallbackTier.inverters,
-    };
+  if (!items.length) {
+    renderPriceList();
+    return;
+  }
+
+  const normQuality = q => {
+    q = String(q || '').toLowerCase();
+    if (q === 'best') return 'high';
+    if (q === 'middle') return 'medium';
+    if (q === 'basic') return 'standard';
+    return ['high','medium','standard','common'].includes(q) ? q : 'common';
+  };
+
+  const mapped = items.map(item => {
+    const x = calculatorItem(item);
+    x.quality = normQuality(item.quality);
+    x.active = item.active !== false;
+    return x;
   });
-  const commonEasy = easy.filter(x => x.quality === 'common');
-  const s = config.settings || {};
-  const advancedPanels = advanced.filter(x => x.category === 'panel');
-  const advancedBatteries = advanced.filter(x => x.category === 'battery');
-  const advancedInverters = advanced.filter(x => x.category === 'inverter');
-  const commonBatteries = commonEasy.filter(x => x.category === 'battery').map(calculatorItem);
-  const commonThreePhase = commonEasy.filter(x => x.category === 'inverter' && x.phase === '3ph').map(calculatorItem);
+
+  const tierFor = quality => {
+    const oldTier = fallback.qualityTiers?.[quality] || { label: quality, panels: [], batteries: [], inverters: [] };
+    const panels = mapped.filter(x => x.category === 'panel' && x.quality === quality);
+    const batteries = mapped.filter(x => x.category === 'battery' && x.quality === quality);
+    const inverters = mapped.filter(x => x.category === 'inverter' && x.quality === quality && x.phase !== '3ph');
+    return {
+      label: oldTier.label || quality,
+      panels: panels.length ? panels : oldTier.panels,
+      batteries: batteries.length ? batteries : oldTier.batteries,
+      inverters: inverters.length ? inverters : oldTier.inverters,
+    };
+  };
+
+  const commonBatteries = mapped.filter(x => x.category === 'battery' && x.quality === 'common');
+  const threePhase = mapped.filter(x => x.category === 'inverter' && x.phase === '3ph');
+  const allPanels = mapped.filter(x => x.category === 'panel');
+  const allBatteries = mapped.filter(x => x.category === 'battery');
+  const allInverters = mapped.filter(x => x.category === 'inverter');
+  const s = config?.settings || {};
   const numberOr = (value, defaultValue) => Number.isFinite(Number(value)) ? Number(value) : defaultValue;
+
   window.ALO_PRICING = {
     currency: '$',
-    qualityTiers: tiers,
+    qualityTiers: {
+      high: tierFor('high'),
+      medium: tierFor('medium'),
+      standard: tierFor('standard'),
+    },
     common: {
       batteries: commonBatteries.length ? commonBatteries : fallback.common.batteries,
-      threePhaseInverters: commonThreePhase.length ? commonThreePhase : fallback.common.threePhaseInverters,
+      threePhaseInverters: threePhase.length ? threePhase : fallback.common.threePhaseInverters,
     },
-    panels: advancedPanels.length ? advancedPanels : fallback.panels,
-    batteries: advancedBatteries.length ? advancedBatteries : fallback.batteries,
-    inverters: advancedInverters.length ? advancedInverters : fallback.inverters,
+    panels: allPanels.length ? allPanels : fallback.panels,
+    batteries: allBatteries.length ? allBatteries : fallback.batteries,
+    inverters: allInverters.length ? allInverters : fallback.inverters,
     services: {
       structurePerPanel: numberOr(s.structurePerPanel, fallback.services.structurePerPanel),
       installationPerPanel: numberOr(s.installationPerPanel, fallback.services.installationPerPanel),
       solarCablePerMeter: numberOr(s.solarCablePerMeter, fallback.services.solarCablePerMeter),
       acCablePerMeter: numberOr(s.acCablePerMeter, fallback.services.acCablePerMeter),
-      dcProtection: { single: numberOr(s.dcProtectionSingle, fallback.services.dcProtection.single), '3ph': numberOr(s.dcProtection3ph, fallback.services.dcProtection['3ph']) },
-      acProtection: { single: numberOr(s.acProtectionSingle, fallback.services.acProtection.single), '3ph': numberOr(s.acProtection3ph, fallback.services.acProtection['3ph']) },
-      transport: { erbil: numberOr(s.transportErbil, fallback.services.transport.erbil), outsideErbil: numberOr(s.transportOutside, fallback.services.transport.outsideErbil) },
-      otherElectrical: { upTo16Panels: numberOr(s.otherElectricalUpTo16, fallback.services.otherElectrical.upTo16Panels), above16Panels: numberOr(s.otherElectricalAbove16, fallback.services.otherElectrical.above16Panels) },
-      batteryBusbar: { minimumBatteries: numberOr(s.batteryBusbarMinimum, fallback.services.batteryBusbar.minimumBatteries), price: numberOr(s.batteryBusbarPrice, fallback.services.batteryBusbar.price) },
+      dcProtection: {
+        single: numberOr(s.dcProtectionSingle, fallback.services.dcProtection.single),
+        '3ph': numberOr(s.dcProtection3ph, fallback.services.dcProtection['3ph'])
+      },
+      acProtection: {
+        single: numberOr(s.acProtectionSingle, fallback.services.acProtection.single),
+        '3ph': numberOr(s.acProtection3ph, fallback.services.acProtection['3ph'])
+      },
+      transport: {
+        erbil: numberOr(s.transportErbil, fallback.services.transport.erbil),
+        outsideErbil: numberOr(s.transportOutside, fallback.services.transport.outsideErbil)
+      },
+      otherElectrical: {
+        upTo16Panels: numberOr(s.otherElectricalUpTo16, fallback.services.otherElectrical.upTo16Panels),
+        above16Panels: numberOr(s.otherElectricalAbove16, fallback.services.otherElectrical.above16Panels)
+      },
+      batteryBusbar: {
+        minimumBatteries: numberOr(s.batteryBusbarMinimum, fallback.services.batteryBusbar.minimumBatteries),
+        price: numberOr(s.batteryBusbarPrice, fallback.services.batteryBusbar.price)
+      },
     },
   };
-  renderPriceList();
-  window.dispatchEvent(new CustomEvent('alo-pricing-updated'));
-}
 
+  renderPriceList();
+  window.ALO_PRICING_LIVE_STATUS = config?.source || 'live';
+  window.dispatchEvent(new CustomEvent('alo-pricing-updated', { detail: { source: window.ALO_PRICING_LIVE_STATUS } }));
+}
 renderPriceList();
 window.ALO_PRICING_LIVE_STATUS = 'loading';
 fetch('/api/portal/calculator/config?refresh=' + Date.now(), { cache: 'no-store', headers: { 'accept': 'application/json' } })
   .then(response => response.ok ? response.json() : Promise.reject(new Error('Pricing API unavailable')))
   .then(config => { applyCalculatorConfig(config); window.ALO_PRICING_LIVE_STATUS = config.source || 'live'; })
   .catch(error => { window.ALO_PRICING_LIVE_STATUS = 'fallback'; console.warn('Using the built-in price list:', error.message); });
+
+
+async function refreshAloLivePricing(){
+  try{
+    const response = await fetch('/api/portal/calculator/config?refresh=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'accept': 'application/json' }
+    });
+    if(!response.ok) throw new Error('HTTP '+response.status);
+    const config = await response.json();
+    applyCalculatorConfig(config);
+    return config;
+  }catch(error){
+    window.ALO_PRICING_LIVE_STATUS='fallback';
+    console.warn('ALO live pricing refresh failed:', error);
+    return null;
+  }
+}
+window.refreshAloLivePricing = refreshAloLivePricing;
+window.addEventListener('focus', refreshAloLivePricing);
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') refreshAloLivePricing();
+});
+setInterval(refreshAloLivePricing, 30000);
