@@ -153,7 +153,7 @@ function calculatorItem(item) {
 }
 
 function applyCalculatorConfig(config) {
-  const items = Array.isArray(config.items) ? config.items : [];
+  const items = Array.isArray(config.items) ? config.items.filter(item => item && item.active !== false) : [];
   const fallback = window.ALO_PRICING;
   const enabledFor = mode => items.filter(item => item.mode === mode || item.mode === 'both');
   const advanced = enabledFor('advanced').map(calculatorItem);
@@ -206,7 +206,8 @@ function applyCalculatorConfig(config) {
 }
 
 renderPriceList();
-fetch('/api/portal/calculator/config?refresh=' + Date.now(), { cache: 'no-store' })
+window.ALO_PRICING_LIVE_STATUS = 'loading';
+fetch('/api/portal/calculator/config?refresh=' + Date.now(), { cache: 'no-store', headers: { 'accept': 'application/json' } })
   .then(response => response.ok ? response.json() : Promise.reject(new Error('Pricing API unavailable')))
-  .then(applyCalculatorConfig)
-  .catch(error => console.warn('Using the built-in price list:', error.message));
+  .then(config => { applyCalculatorConfig(config); window.ALO_PRICING_LIVE_STATUS = config.source || 'live'; })
+  .catch(error => { window.ALO_PRICING_LIVE_STATUS = 'fallback'; console.warn('Using the built-in price list:', error.message); });
