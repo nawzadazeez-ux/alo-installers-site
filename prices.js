@@ -140,6 +140,10 @@ function renderPriceList() {
 function calculatorItem(item) {
   return {
     id: item.code,
+    code: item.code,
+    category: item.category || '',
+    mode: item.mode || 'both',
+    active: item.active !== false,
     name: item.name,
     price: Number(item.price),
     warranty: item.warranty || 'No Warranty',
