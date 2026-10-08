@@ -1,6 +1,7 @@
 async function ensure(db){
   await db.prepare(`CREATE TABLE IF NOT EXISTS app_calculator_config (id INTEGER PRIMARY KEY CHECK(id=1), config_json TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS app_calculator_history (id INTEGER PRIMARY KEY AUTOINCREMENT, item_count INTEGER NOT NULL DEFAULT 0, changed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS admin_activity_log (id INTEGER PRIMARY KEY AUTOINCREMENT, action TEXT NOT NULL, detail TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
 }
 async function authorized(request){
   const auth=request.headers.get('authorization')||'';
@@ -65,7 +66,8 @@ export async function onRequestPost({request,env}){
   await ensure(env.DB);
   await env.DB.batch([
     env.DB.prepare(`INSERT INTO app_calculator_config(id,config_json,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET config_json=excluded.config_json,updated_at=CURRENT_TIMESTAMP`).bind(JSON.stringify(clean)),
-    env.DB.prepare('INSERT INTO app_calculator_history(item_count) VALUES(?)').bind(clean.items.length)
+    env.DB.prepare('INSERT INTO app_calculator_history(item_count) VALUES(?)').bind(clean.items.length),
+    env.DB.prepare("INSERT INTO admin_activity_log(action,detail) VALUES('calculator_publish',?)").bind('Published '+clean.items.length+' calculator items')
   ]);
   const {results:history}=await env.DB.prepare('SELECT id,item_count,changed_at FROM app_calculator_history ORDER BY id DESC LIMIT 20').all();
   return json({ok:true,...clean,history});
