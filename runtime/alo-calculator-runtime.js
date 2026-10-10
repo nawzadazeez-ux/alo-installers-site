@@ -48,7 +48,7 @@ function calculateEasySolar(){
   const tier=pricing.qualityTiers?.[quality]||pricing.qualityTiers?.high;
   const panelItem=tier?.panels?.[0];
   // Customer sizing rule: every solar panel is counted as 2 amps of daytime load.
-  const panels=Math.max(1,Math.ceil(day/2));
+  const panels=day>0?Math.ceil(day/2):0;
   if(!panelItem)throw new Error('No solar panel for this quality');
   const selectedPanel=selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id,panelItem);
   if(!selectedPanel)throw new Error('Panel model is absent from price list');
@@ -70,8 +70,7 @@ function calculateEasySolar(){
   document.getElementById('calcSystemType').value=phase;
   const inverterSelect=document.getElementById('calcInverter');
   if(inverterSelect){delete inverterSelect.dataset.manualSelected;delete inverterSelect.dataset.easyUnits}
-  // Refresh phase filtering before selecting the recommended inverter.
-  calculateSolar();
+  // Phase-specific protections are configured after equipment selection.
   const selectedInvItem=(phase==='3ph'?pricing.common.threePhaseInverters:tier.inverters).find(o=>o.id===inverterId);
   const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId,selectedInvItem);
   if(!chosenInverter)throw new Error('Inverter model is absent from price list');
@@ -90,8 +89,18 @@ function calculateEasySolar(){
   if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id,batteryItem)}else{document.getElementById('calcBattery').value='0'}
   const qty=document.getElementById('calcBatteryQty');
   if(qty){while(qty.options.length<=batteries){const o=document.createElement('option');o.value=String(qty.options.length);o.textContent=o.value;qty.appendChild(o)}qty.value=String(batteries)}
-  // First pass prepares the correct single/three-phase protection options.
-  calculateSolar();
+  // Initialize AC/DC protection options before computing the final total.
+  const protectionPhase=document.getElementById('calcSystemType').value==='3ph'?'3ph':'single';
+  for(const [id,cost] of [['calcDcProtection',pricing.services.dcProtection[protectionPhase]],['calcAcProtection',pricing.services.acProtection[protectionPhase]]]){
+    const field=document.getElementById(id);
+    if(!field)continue;
+    const none=document.createElement('option');none.value='0';none.textContent='Not selected';
+    const included=document.createElement('option');included.value=String(cost);included.textContent='Protection — $'+cost;
+    field.replaceChildren(none,included);
+    field.value=String(cost);
+    field.dataset.phase=protectionPhase;
+    field.dataset.price=String(cost);
+  }
   const dcProtectionCost=String(pricing.services.dcProtection[phase]);
   const acProtectionCost=String(pricing.services.acProtection[phase]);
   const dc=document.getElementById('calcDcProtection'),ac=document.getElementById('calcAcProtection');
