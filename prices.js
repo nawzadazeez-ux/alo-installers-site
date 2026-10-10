@@ -102,14 +102,6 @@ window.ALO_PRICING = {
 };
 
 function renderPriceList() {
-  // Keep user selections while the background pricing feed refreshes.
-  // Product option values are prices, so track their stable item IDs instead.
-  const selectIds=['calcPanel','calcBattery','calcInverter','calcTransport','easyTransport'];
-  const savedSelections=Object.fromEntries(selectIds.map(id=>{
-    const el=document.getElementById(id);
-    const selected=el?.selectedOptions?.[0];
-    return [id,{itemId:selected?.dataset?.id || '',value:el?.value ?? '',label:selected?.textContent||'',hasSelection:!!selected,markup:selected?.outerHTML||''}];
-  }));
   const p = window.ALO_PRICING;
   const money = value => Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
   const option = (item, extra = '') =>
@@ -143,24 +135,6 @@ function renderPriceList() {
   if (transport) transport.innerHTML = transportOptions;
   const easyTransport = document.getElementById('easyTransport');
   if (easyTransport) easyTransport.innerHTML = transportOptions.replace('<option value="0">Not selected — $0</option>', '');
-  for(const id of selectIds){
-    const el=document.getElementById(id), saved=savedSelections[id];
-    if(!el||!saved?.hasSelection)continue;
-    const options=Array.from(el.options);
-    const match=saved.itemId
-      ? options.find(option=>option.dataset.id===saved.itemId)
-      : options.find(option=>option.value===saved.value);
-    if(match)el.selectedIndex=match.index;
-    else if(saved.itemId && saved.markup){
-      // A temporary/incomplete admin feed must not silently reset a chosen item.
-      // Keep the selected item until a valid replacement is explicitly chosen.
-      const group=document.createElement('optgroup');
-      group.label='Previously selected';
-      group.innerHTML=saved.markup;
-      const retained=group.querySelector('option');
-      if(retained){el.appendChild(retained);el.value=retained.value;}
-    }
-  }
 }
 
 function calculatorItem(item) {
@@ -182,11 +156,7 @@ function calculatorItem(item) {
   };
 }
 
-let lastAppliedCalculatorConfigSignature = '';
 function applyCalculatorConfig(config) {
-  // A polling response with unchanged prices must never rebuild controls.
-  const signature=JSON.stringify({items:config?.items||[],settings:config?.settings||{}});
-  if(signature===lastAppliedCalculatorConfigSignature)return;
   const raw = Array.isArray(config?.items) ? config.items : [];
   const items = raw.filter(item => item && item.active !== false);
   const fallback = window.ALO_PRICING;
@@ -274,7 +244,6 @@ function applyCalculatorConfig(config) {
   };
 
   renderPriceList();
-  lastAppliedCalculatorConfigSignature=signature;
   window.ALO_PRICING_LIVE_STATUS = config?.source || 'live';
   window.dispatchEvent(new CustomEvent('alo-pricing-updated', { detail: { source: window.ALO_PRICING_LIVE_STATUS } }));
 }
@@ -303,6 +272,8 @@ async function refreshAloLivePricing(){
   }
 }
 window.refreshAloLivePricing = refreshAloLivePricing;
-// One initial load is sufficient for the public calculator. Refreshing options on
-// focus/visibility or a 30-second timer can interrupt an in-progress quote.
-// Admin changes are picked up the next time the calculator page is loaded.
+window.addEventListener('focus', refreshAloLivePricing);
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') refreshAloLivePricing();
+});
+setInterval(refreshAloLivePricing, 30000);
