@@ -906,7 +906,7 @@ function calculateEasySolar(){
   const tier=pricing.qualityTiers?.[quality]||pricing.qualityTiers?.high;
   const panelItem=tier?.panels?.[0];
   // Customer sizing rule: every solar panel is counted as 2 amps of daytime load.
-  const panels=Math.max(1,Math.ceil(day/2));
+  const panels=day>0?Math.ceil(day/2):0;
   selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id);
   document.getElementById('calcKwh').value=panels;
   document.getElementById('calcType').value='hybrid';
@@ -915,11 +915,11 @@ function calculateEasySolar(){
   const phase=document.getElementById('easyPhase')?.value==='3ph'?'3ph':'single';
   if(phase==='3ph'){
     // Deye is the available 3-phase range in the supplied equipment list.
-    const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
+    const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }else{
-    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
+    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }
@@ -938,7 +938,7 @@ function calculateEasySolar(){
   // This 100Ah rule applies to all quality levels: 1–3A = one battery,
   // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
   const batteries=night>0
-    ? (batteryItem.id===smallBattery.id ? Math.ceil(night/3) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
+    ? (batteryItem.id===smallBattery.id ? (night<=3?1:2) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
     : 0;
   if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id)}else{document.getElementById('calcBattery').value='0'}
   const qty=document.getElementById('calcBatteryQty');
@@ -1044,11 +1044,11 @@ function calculateSolar() {
   const acProtection = get('calcAcProtection');
   [[dcProtection,pricing.services.dcProtection[phase]],[acProtection,pricing.services.acProtection[phase]]].forEach(([select,value])=>{
     const label=phase==='3ph'?`${c.three} — $${value}`:`${c.single} — $${value}`;
-    if(select&&(select.dataset.phase!==phase||select.dataset.price!==String(value))){select.innerHTML=`<option value="0">Not selected — $0</option><option value="${value}">${label}</option>`;select.dataset.phase=phase;select.dataset.price=String(value);}
+    if(select&&(select.dataset.phase!==phase||select.dataset.price!==String(value))){const wasEnabled=Number(select.value)>0;select.innerHTML=`<option value="0">Not selected — $0</option><option value="${value}">${label}</option>`;select.value=wasEnabled?String(value):'0';select.dataset.phase=phase;select.dataset.price=String(value);}
   });
 
-  const dcCost = parseFloat(dcProtection?.value||0);
-  const acCost = parseFloat(acProtection?.value||0);
+  const dcCost = parseFloat(dcProtection?.value||0) * inverterUnits;
+  const acCost = parseFloat(acProtection?.value||0) * inverterUnits;
   const cableMeters = parseFloat(get('calcCable')?.value || 0);
   const acCableMeters = parseFloat(get('calcAcCable')?.value || 0);
   const cableCost = cableMeters * pricing.services.solarCablePerMeter;
@@ -1199,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const system = document.getElementById('calcSystemType') || document.getElementById('systemType');
   if (inv) inv.addEventListener('change', function(){ inv.dataset.manualSelected = '1'; if (typeof calculateSolar === 'function') calculateSolar(); });
   if (system) system.addEventListener('change', function(){
-    if (inv) delete inv.dataset.manualSelected;
+    if (inv) { delete inv.dataset.manualSelected; delete inv.dataset.easyUnits; }
     if (typeof calculateSolar === 'function') calculateSolar();
   });
   ['calcKwh','calcPanel','calcBattery','calcBatteryQty','calcDcProtection','calcAcProtection','calcCable','calcAcCable','calcTransport','calcSystemType']
