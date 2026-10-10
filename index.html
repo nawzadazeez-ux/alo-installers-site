@@ -928,8 +928,8 @@ function calculateEasySolar(){
   document.getElementById('calcSystemType').value=phase;
   const inverterSelect=document.getElementById('calcInverter');
   if(inverterSelect){delete inverterSelect.dataset.manualSelected;delete inverterSelect.dataset.easyUnits}
-  // Refresh phase filtering before selecting the recommended inverter.
-  calculateSolar();
+  // Select the recommended inverter directly. Recalculation happens after
+  // all Easy Mode fields have been updated to avoid transient invalid states.
   const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId);
   if(inverterSelect){inverterSelect.dataset.easyUnits=String(inverterUnits);inverterSelect.dataset.manualSelected='1'}
 
@@ -1277,5 +1277,67 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
 
 <!-- Pricing is loaded once by prices.js. No duplicate forced refresh. -->
 
+<script>
+/* Preserve the customer's in-progress calculator draft across accidental
+   page reloads and asynchronous option refreshes. Explicit Reset clears it. */
+(function(){
+  const storageKey='aloSolarCalculatorDraftV1';
+  const ids=['easyDayAmps','easyNightAmps','easyPhase','easyTransport',
+    'calcKwh','calcType','calcSystemType','calcBatteryQty',
+    'calcCable','calcAcCable','calcTransport','monthlyElectricityBill'];
+  const productIds=['calcPanel','calcInverter','calcBattery'];
+  let restoring=false;
+  const get=id=>document.getElementById(id);
+  function save(){
+    if(restoring)return;
+    const fields={};
+    ids.forEach(id=>{if(get(id))fields[id]=get(id).value});
+    productIds.forEach(id=>{const el=get(id),option=el?.selectedOptions?.[0];if(el)fields[id]={
+      id:option?.dataset?.id||'',value:el.value
+    }});
+    fields.quality=document.querySelector('input[name="easyQuality"]:checked')?.value||'high';
+    fields.mode=get('calculator')?.classList.contains('easy-mode')?'easy':'advanced';
+    fields.inverterUnits=get('calcInverter')?.dataset.easyUnits||'';
+    fields.hasResult=!!get('easySummary')&&!get('easySummary').hidden;
+    try{sessionStorage.setItem(storageKey,JSON.stringify(fields))}catch(e){}
+  }
+  function restore(){
+    let data;try{data=JSON.parse(sessionStorage.getItem(storageKey)||'null')}catch(e){}
+    if(!data)return;
+    restoring=true;
+    try{
+      ids.forEach(id=>{const el=get(id);if(el&&data[id]!==undefined)el.value=data[id]});
+      productIds.forEach(id=>{
+        const el=get(id),saved=data[id];if(!el||!saved)return;
+        const opts=Array.from(el.options);
+        const selected=saved.id?opts.find(o=>o.dataset.id===saved.id):opts.find(o=>o.value===saved.value);
+        if(selected)el.selectedIndex=selected.index;
+      });
+      const quality=document.querySelector('input[name="easyQuality"][value="'+data.quality+'"]');
+      if(quality)quality.checked=true;
+      if(typeof setCalculatorMode==='function')setCalculatorMode(data.mode==='advanced'?'advanced':'easy');
+      const inverter=get('calcInverter');
+      if(inverter){if(data.inverterUnits)inverter.dataset.easyUnits=data.inverterUnits;else delete inverter.dataset.easyUnits}
+      if(data.hasResult&&data.mode==='easy'&&typeof calculateEasySolar==='function')calculateEasySolar();
+      else if(typeof calculateSolar==='function')calculateSolar();
+    }finally{restoring=false}
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    // Restore after initial async pricing response when available as well.
+    restore();
+    get('calculator')?.addEventListener('input',save);
+    get('calculator')?.addEventListener('change',save);
+    get('calculator')?.addEventListener('click',e=>{
+      if(e.target.closest('#easyResetBtn,#calcResetBtn')){
+        try{sessionStorage.removeItem(storageKey)}catch(err){}
+        return;
+      }
+      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn'))queueMicrotask(save);
+    });
+    window.addEventListener('alo-pricing-updated',()=>{restore()});
+    window.addEventListener('pagehide',save);
+  });
+})();
+</script>
 </body>
 </html>
