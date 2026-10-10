@@ -872,8 +872,8 @@ if(menuToggle&&mainNav){
 <script src="prices.js?v=20261010-nonreset-v2"></script>
 <script>
 window.addEventListener('alo-pricing-updated',()=>{
-  applyLanguage(localStorage.getItem('aloLanguage')||'en');
-  calculateSolar();
+  // Pricing changes must never reinitialize the customer's form or language.
+  if(!document.getElementById('calculator')?.classList.contains('easy-mode')) calculateSolar();
 });
 function setCalculatorMode(mode){
   const section=document.getElementById('calculator');
@@ -917,10 +917,12 @@ function calculateEasySolar(){
     // Deye is the available 3-phase range in the supplied equipment list.
     const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
+    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }else{
     const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
+    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }
   document.getElementById('calcSystemType').value=phase;
@@ -934,6 +936,7 @@ function calculateEasySolar(){
   const smallBattery=pricing.common.batteries[0];
   const tierBattery=tier.batteries[0];
   const batteryItem=night<=6?smallBattery:tierBattery;
+  if(!batteryItem){if(summary){summary.hidden=false;summary.textContent='Battery configuration missing.'}return;}
   const batteryRate=batteryItem.ampsPerHour||60;
   // This 100Ah rule applies to all quality levels: 1–3A = one battery,
   // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
@@ -960,7 +963,7 @@ function calculateEasySolar(){
     const labels=lang==='ku'?['فەیز','پانێڵ','ئینڤێرتەر','پاتری','پاراستنی DC و AC','گواستنەوە','کۆی نرخ']:lang==='ar'?['الطور','الألواح','العاكس','البطارية','حماية DC وAC','النقل','السعر الإجمالي']:['Phase','Panels','Inverter','Battery','DC & AC protection','Transport','Total'];
     const transportText=document.querySelector('#easyTransport option:checked')?.textContent||'';
     const phaseText=document.querySelector('#easyPhase option:checked')?.textContent||'';
-    summary.hidden=false;summary.innerHTML=`<strong>${labels[0]}:</strong> ${phaseText}<br><strong>${labels[1]}:</strong> ${panels} × ${panelText}<br><strong>${labels[2]}:</strong> ${inverterUnits} × ${invText}<br><strong>${labels[3]}:</strong> ${batteries} × ${batteryText}<br><strong>${labels[4]}:</strong> $${Number(dcProtectionCost)+Number(acProtectionCost)}<br><strong>${labels[5]}:</strong> ${transportText}<br><strong>${labels[6]}:</strong> ${document.getElementById('calcTotal')?.textContent||'$0'}`;
+    summary.hidden=false;summary.innerHTML=`<strong>${labels[0]}:</strong> ${phaseText}<br><strong>${labels[1]}:</strong> ${panels} × ${panelText}<br><strong>${labels[2]}:</strong> ${inverterUnits} × ${invText}<br><strong>${labels[3]}:</strong> ${batteries} × ${batteryText}<br><strong>${labels[4]}:</strong> ${(Number(dcProtectionCost)+Number(acProtectionCost))*inverterUnits}<br><strong>${labels[5]}:</strong> ${transportText}<br><strong>${labels[6]}:</strong> ${document.getElementById('calcTotal')?.textContent||'$0'}`;
   }
 }
 
@@ -1020,10 +1023,7 @@ function calculateSolar() {
   const batteryUnitPrice = parseFloat(battery?.value || 0);
   const batteryQtyField = get('calcBatteryQty');
   let batteryQty = Math.max(0, parseInt(batteryQtyField?.value || 0) || 0);
-  if (batteryUnitPrice > 0 && batteryQty === 0) {
-    batteryQty = 1;
-    if (batteryQtyField) batteryQtyField.value = '1';
-  }
+  // Preserve intentionally selected zero batteries (e.g. day-only usage).
   if (batteryUnitPrice === 0) {
     batteryQty = 0;
     if (batteryQtyField) batteryQtyField.value = '0';
