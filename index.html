@@ -869,7 +869,7 @@ if(menuToggle&&mainNav){
   else finishSetup();
 })();
 </script>
-<script src="prices.js?v=13"></script>
+<script src="prices.js?v=20261010-nonreset-v2"></script>
 <script>
 window.addEventListener('alo-pricing-updated',()=>{
   applyLanguage(localStorage.getItem('aloLanguage')||'en');
@@ -1275,33 +1275,7 @@ const statuses=[];if(!powered)statuses.push(d[15]);else{statuses.push(solar?d[20
 card.querySelector('.sol-demo').innerHTML=svg+'<div class="sol-status" role="status">'+[...new Set(statuses)].map(x=>'<div>'+x+'</div>').join('')+'</div>';});note.textContent=d[19];}
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});render();})();</script>
 
-<!-- ALO LIVE CALCULATOR SYNC V12 -->
-<script>
-(function(){
-  async function aloForceLiveCalculatorSync(){
-    try{
-      const r=await fetch('/api/portal/calculator/config?ts='+Date.now(),{cache:'no-store',headers:{'accept':'application/json'}});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      const cfg=await r.json();
-      window.ALO_LIVE_CALCULATOR_CONFIG=cfg;
-      if(typeof window.applyCalculatorConfig==='function'){
-        window.applyCalculatorConfig(cfg);
-      }else if(typeof applyCalculatorConfig==='function'){
-        applyCalculatorConfig(cfg);
-      }
-      if(typeof window.calculateSolar==='function') window.calculateSolar();
-      document.documentElement.dataset.aloPricingSource=cfg.source||'live';
-      document.documentElement.dataset.aloPricingSyncedAt=String(Date.now());
-    }catch(e){
-      console.warn('ALO live calculator sync failed:',e);
-    }
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',aloForceLiveCalculatorSync,{once:true});
-  else aloForceLiveCalculatorSync();
-  window.addEventListener('pageshow',aloForceLiveCalculatorSync);
-  window.addEventListener('focus',aloForceLiveCalculatorSync);
-  setTimeout(aloForceLiveCalculatorSync,1200);
-})();
-</script>
+<!-- Pricing is loaded once by prices.js. No duplicate forced refresh. -->
+
 </body>
 </html>
