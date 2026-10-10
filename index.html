@@ -907,7 +907,9 @@ function calculateEasySolar(){
   const panelItem=tier?.panels?.[0];
   // Customer sizing rule: every solar panel is counted as 2 amps of daytime load.
   const panels=Math.max(1,Math.ceil(day/2));
-  selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id);
+  if(!panelItem)throw new Error('No solar panel for this quality');
+  const selectedPanel=selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id);
+  if(!selectedPanel)throw new Error('Panel model is absent from price list');
   document.getElementById('calcKwh').value=panels;
   document.getElementById('calcType').value='hybrid';
 
@@ -929,11 +931,13 @@ function calculateEasySolar(){
   // Refresh phase filtering before selecting the recommended inverter.
   calculateSolar();
   const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId);
+  if(!chosenInverter)throw new Error('Inverter model is absent from price list');
   if(inverterSelect){inverterSelect.dataset.easyUnits=String(inverterUnits);inverterSelect.dataset.manualSelected='1'}
 
   const smallBattery=pricing.common.batteries[0];
   const tierBattery=tier.batteries[0];
   const batteryItem=night<=6?smallBattery:tierBattery;
+  if(!batteryItem)throw new Error('Battery is absent from pricing configuration');
   const batteryRate=batteryItem.ampsPerHour||60;
   // This 100Ah rule applies to all quality levels: 1–3A = one battery,
   // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
@@ -1187,7 +1191,19 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('calcWhatsAppBtn')?.addEventListener('click',sendCalculatorToWhatsApp);
   document.getElementById('easyModeBtn')?.addEventListener('click',()=>setCalculatorMode('easy'));
   document.getElementById('advancedModeBtn')?.addEventListener('click',()=>setCalculatorMode('advanced'));
-  document.getElementById('easyCalculateBtn')?.addEventListener('click',calculateEasySolar);
+  document.getElementById('easyCalculateBtn')?.addEventListener('click',()=>{
+    const summary=document.getElementById('easySummary');
+    try{
+      if(!window.ALO_PRICING?.qualityTiers)throw new Error('Equipment price list is not loaded');
+      calculateEasySolar();
+      const day=Number(document.getElementById('easyDayAmps')?.value||0);
+      const night=Number(document.getElementById('easyNightAmps')?.value||0);
+      if((day>0||night>0)&&summary?.hidden)throw new Error('No calculation result was displayed');
+    }catch(error){
+      console.error('ALO Solar Calculator calculation failed:',error);
+      if(summary){summary.hidden=false;summary.textContent='هەڵە لە حیسابکردن ڕوویدا. تکایە جارێکی دیکە هەوڵ بدەوە. / Calculation failed: '+(error?.message||'Unknown error');}
+    }
+  });
   document.getElementById('easyResetBtn')?.addEventListener('click',resetEasySolar);
   document.getElementById('easyWhatsAppBtn')?.addEventListener('click',sendEasySolarToWhatsApp);
   document.getElementById('easyTransport')?.addEventListener('change',()=>{if((parseFloat(document.getElementById('easyDayAmps')?.value)||0)>0||(parseFloat(document.getElementById('easyNightAmps')?.value)||0)>0)calculateEasySolar()});
