@@ -1334,7 +1334,10 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
       }
       if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn'))queueMicrotask(save);
     });
-    window.addEventListener('alo-pricing-updated',()=>{restore()});
+    // Never restore a stale session snapshot in response to a late pricing API
+    // response: the customer may already be typing a newer quote. prices.js
+    // preserves selections by product ID while updating prices.
+    // Restore happens only once on initial page load.
     window.addEventListener('pagehide',save);
   });
 })();
