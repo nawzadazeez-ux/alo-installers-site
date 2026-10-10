@@ -102,6 +102,14 @@ window.ALO_PRICING = {
 };
 
 function renderPriceList() {
+  // Keep user selections while the background pricing feed refreshes.
+  // Product option values are prices, so track their stable item IDs instead.
+  const selectIds=['calcPanel','calcBattery','calcInverter','calcTransport','easyTransport'];
+  const savedSelections=Object.fromEntries(selectIds.map(id=>{
+    const el=document.getElementById(id);
+    const selected=el?.selectedOptions?.[0];
+    return [id,{itemId:selected?.dataset?.id || '',value:el?.value ?? '',hasSelection:!!selected}];
+  }));
   const p = window.ALO_PRICING;
   const money = value => Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
   const option = (item, extra = '') =>
@@ -135,6 +143,16 @@ function renderPriceList() {
   if (transport) transport.innerHTML = transportOptions;
   const easyTransport = document.getElementById('easyTransport');
   if (easyTransport) easyTransport.innerHTML = transportOptions.replace('<option value="0">Not selected — $0</option>', '');
+  for(const id of selectIds){
+    const el=document.getElementById(id), saved=savedSelections[id];
+    if(!el||!saved?.hasSelection)continue;
+    const options=Array.from(el.options);
+    const match=saved.itemId
+      ? options.find(option=>option.dataset.id===saved.itemId)
+      : options.find(option=>option.value===saved.value);
+    if(match)el.selectedIndex=match.index;
+    else if(saved.itemId && options.length)el.selectedIndex=0;
+  }
 }
 
 function calculatorItem(item) {
@@ -156,7 +174,11 @@ function calculatorItem(item) {
   };
 }
 
+let lastAppliedCalculatorConfigSignature = '';
 function applyCalculatorConfig(config) {
+  // A polling response with unchanged prices must never rebuild controls.
+  const signature=JSON.stringify({items:config?.items||[],settings:config?.settings||{}});
+  if(signature===lastAppliedCalculatorConfigSignature)return;
   const raw = Array.isArray(config?.items) ? config.items : [];
   const items = raw.filter(item => item && item.active !== false);
   const fallback = window.ALO_PRICING;
@@ -244,6 +266,7 @@ function applyCalculatorConfig(config) {
   };
 
   renderPriceList();
+  lastAppliedCalculatorConfigSignature=signature;
   window.ALO_PRICING_LIVE_STATUS = config?.source || 'live';
   window.dispatchEvent(new CustomEvent('alo-pricing-updated', { detail: { source: window.ALO_PRICING_LIVE_STATUS } }));
 }
