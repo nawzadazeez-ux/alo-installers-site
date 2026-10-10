@@ -295,8 +295,6 @@ async function refreshAloLivePricing(){
   }
 }
 window.refreshAloLivePricing = refreshAloLivePricing;
-window.addEventListener('focus', refreshAloLivePricing);
-document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible') refreshAloLivePricing();
-});
-setInterval(refreshAloLivePricing, 30000);
+// One initial load is sufficient for the public calculator. Refreshing options on
+// focus/visibility or a 30-second timer can interrupt an in-progress quote.
+// Admin changes are picked up the next time the calculator page is loaded.
