@@ -272,8 +272,6 @@ async function refreshAloLivePricing(){
   }
 }
 window.refreshAloLivePricing = refreshAloLivePricing;
-window.addEventListener('focus', refreshAloLivePricing);
-document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible') refreshAloLivePricing();
-});
-setInterval(refreshAloLivePricing, 30000);
+// Prices are loaded on page entry. Do not rebuild dropdowns automatically
+// while the customer is preparing or reviewing a calculated quotation.
+// Admin may explicitly request window.refreshAloLivePricing() if needed.
