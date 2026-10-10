@@ -108,7 +108,7 @@ function renderPriceList() {
   const savedSelections=Object.fromEntries(selectIds.map(id=>{
     const el=document.getElementById(id);
     const selected=el?.selectedOptions?.[0];
-    return [id,{itemId:selected?.dataset?.id || '',value:el?.value ?? '',hasSelection:!!selected}];
+    return [id,{itemId:selected?.dataset?.id || '',value:el?.value ?? '',label:selected?.textContent||'',hasSelection:!!selected,markup:selected?.outerHTML||''}];
   }));
   const p = window.ALO_PRICING;
   const money = value => Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -151,7 +151,15 @@ function renderPriceList() {
       ? options.find(option=>option.dataset.id===saved.itemId)
       : options.find(option=>option.value===saved.value);
     if(match)el.selectedIndex=match.index;
-    else if(saved.itemId && options.length)el.selectedIndex=0;
+    else if(saved.itemId && saved.markup){
+      // A temporary/incomplete admin feed must not silently reset a chosen item.
+      // Keep the selected item until a valid replacement is explicitly chosen.
+      const group=document.createElement('optgroup');
+      group.label='Previously selected';
+      group.innerHTML=saved.markup;
+      const retained=group.querySelector('option');
+      if(retained){el.appendChild(retained);el.value=retained.value;}
+    }
   }
 }
 
