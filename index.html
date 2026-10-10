@@ -1287,9 +1287,10 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
     'calcCable','calcAcCable','calcTransport','monthlyElectricityBill'];
   const productIds=['calcPanel','calcInverter','calcBattery'];
   let restoring=false;
+  let explicitReset=false;
   const get=id=>document.getElementById(id);
   function save(){
-    if(restoring)return;
+    if(restoring||explicitReset)return;
     const fields={};
     ids.forEach(id=>{if(get(id))fields[id]=get(id).value});
     productIds.forEach(id=>{const el=get(id),option=el?.selectedOptions?.[0];if(el)fields[id]={
@@ -1325,20 +1326,28 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
   document.addEventListener('DOMContentLoaded',()=>{
     // Restore after initial async pricing response when available as well.
     restore();
-    get('calculator')?.addEventListener('input',save);
-    get('calculator')?.addEventListener('change',save);
+    get('calculator')?.addEventListener('input',()=>{explicitReset=false;save()});
+    get('calculator')?.addEventListener('change',()=>{explicitReset=false;save()});
+    // Capture the final calculator result after the button's own handler runs.
+    // This listener is on the parent so it executes after the target handler.
     get('calculator')?.addEventListener('click',e=>{
       if(e.target.closest('#easyResetBtn,#calcResetBtn')){
+        // Let the explicit reset finish, then discard the draft. Do not allow
+        // pagehide to persist a reset snapshot over the user's previous quote.
+        explicitReset=true;
         try{sessionStorage.removeItem(storageKey)}catch(err){}
         return;
       }
-      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn'))queueMicrotask(save);
+      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn'))save();
     });
     // Never restore a stale session snapshot in response to a late pricing API
     // response: the customer may already be typing a newer quote. prices.js
     // preserves selections by product ID while updating prices.
     // Restore happens only once on initial page load.
     window.addEventListener('pagehide',save);
+    // Save early before browser/PWA navigation. Keeping an up-to-date snapshot
+    // also protects against unexpected reloads without depending on pagehide.
+    window.addEventListener('beforeunload',save);
   });
 })();
 </script>
