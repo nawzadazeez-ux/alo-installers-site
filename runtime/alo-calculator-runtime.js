@@ -1,7 +1,8 @@
 
 window.addEventListener('alo-pricing-updated',()=>{
-  applyLanguage(localStorage.getItem('aloLanguage')||'en');
-  calculateSolar();
+  // Do not reinitialize or recalculate an Easy quote when the initial
+  // asynchronous prices arrive. Recalculate Advanced only before first quote.
+  if(!document.getElementById('calculator')?.classList.contains('easy-mode')) calculateSolar();
 });
 function setCalculatorMode(mode){
   const section=document.getElementById('calculator');
