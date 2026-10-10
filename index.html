@@ -869,11 +869,11 @@ if(menuToggle&&mainNav){
   else finishSetup();
 })();
 </script>
-<script src="prices.js?v=20261010-nonreset-v2"></script>
+<script src="prices.js?v=20261010-restored"></script>
 <script>
 window.addEventListener('alo-pricing-updated',()=>{
-  // Pricing changes must never reinitialize the customer's form or language.
-  if(!document.getElementById('calculator')?.classList.contains('easy-mode')) calculateSolar();
+  applyLanguage(localStorage.getItem('aloLanguage')||'en');
+  calculateSolar();
 });
 function setCalculatorMode(mode){
   const section=document.getElementById('calculator');
@@ -886,500 +886,11 @@ function setCalculatorMode(mode){
   if(!isEasy){const inv=document.getElementById('calcInverter');if(inv)delete inv.dataset.easyUnits}
 }
 
-function selectCalcOption(id,matcher,item){
+function selectCalcOption(id,matcher){
   const select=document.getElementById(id);if(!select)return null;
-  let option=Array.from(select.options).find(o=>matcher(o));
-  // Live admin configuration may contain a quality-tier product that is absent
-  // from the flattened dropdown list. Never turn a valid recommendation into $0.
-  if(!option && item && item.id && Number(item.price)>0){
-    option=document.createElement('option');
-    option.value=String(item.price);
-    option.dataset.id=String(item.id);
-    option.dataset.warranty=item.warranty||'No Warranty';
-    if(item.watts)option.dataset.watts=String(item.watts);
-    if(item.kw)option.dataset.kw=String(item.kw);
-    if(item.phase)option.dataset.phase=String(item.phase);
-    if(item.maxPanels)option.dataset.maxPanels=String(item.maxPanels);
-    option.textContent=item.name+' — 
-
-function calculateEasySolar(){
-  const pricing=window.ALO_PRICING;
-  const day=Math.min(500,Math.max(0,parseFloat(document.getElementById('easyDayAmps')?.value)||0));
-  const night=Math.min(500,Math.max(0,parseFloat(document.getElementById('easyNightAmps')?.value)||0));
-  const quality=document.querySelector('input[name="easyQuality"]:checked')?.value||'high';
-  const lang=document.documentElement.lang||'en';
-  const summary=document.getElementById('easySummary');
-  if(day<=0&&night<=0){if(summary){summary.hidden=false;summary.textContent=lang==='ku'?'تکایە ئەمپێری ڕۆژ یان شەو داخڵ بکە.':lang==='ar'?'يرجى إدخال حمل النهار أو الليل.':'Please enter the day or night load.'}return}
-
-  const tier=pricing.qualityTiers?.[quality]||pricing.qualityTiers?.high;
-  const panelItem=tier?.panels?.[0];
-  // Customer sizing rule: every solar panel is counted as 2 amps of daytime load.
-  const panels=day>0?Math.ceil(day/2):0;
-  const chosenPanel=selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id,panelItem);
-  document.getElementById('calcKwh').value=panels;
-  document.getElementById('calcType').value='hybrid';
-
-  let inverterName='',inverterId='',inverterUnits=1;
-  const phase=document.getElementById('easyPhase')?.value==='3ph'?'3ph':'single';
-  if(phase==='3ph'){
-    // Deye is the available 3-phase range in the supplied equipment list.
-    const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
-    const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
-    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
-    inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
-  }else{
-    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
-    const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
-    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
-    inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
-  }
-  document.getElementById('calcSystemType').value=phase;
-  const inverterSelect=document.getElementById('calcInverter');
-  if(inverterSelect){delete inverterSelect.dataset.manualSelected;delete inverterSelect.dataset.easyUnits}
-  // Select the recommended inverter directly. Recalculation happens after
-  // all Easy Mode fields have been updated to avoid transient invalid states.
-  const selectedInverterItem=phase==='3ph'
-    ? pricing.common.threePhaseInverters.find(x=>x.id===inverterId)
-    : tier.inverters.find(x=>x.id===inverterId);
-  const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId,selectedInverterItem);
-  if(inverterSelect){inverterSelect.dataset.easyUnits=String(inverterUnits);inverterSelect.dataset.manualSelected='1'}
-
-  const smallBattery=pricing.common.batteries[0];
-  const tierBattery=tier.batteries[0];
-  const batteryItem=night<=6?smallBattery:tierBattery;
-  if(!batteryItem){if(summary){summary.hidden=false;summary.textContent='Battery configuration missing.'}return;}
-  const batteryRate=batteryItem.ampsPerHour||60;
-  // This 100Ah rule applies to all quality levels: 1–3A = one battery,
-  // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
-  const batteries=night>0
-    ? (batteryItem.id===smallBattery.id ? (night<=3?1:2) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
-    : 0;
-  if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id,batteryItem)}else{document.getElementById('calcBattery').value='0'}
-  const qty=document.getElementById('calcBatteryQty');
-  if(qty){while(qty.options.length<=batteries){const o=document.createElement('option');o.value=String(qty.options.length);o.textContent=o.value;qty.appendChild(o)}qty.value=String(batteries)}
-  if((panels>0&&!chosenPanel)||(panels>0&&!chosenInverter)||(batteries>0&&Number(document.getElementById('calcBattery')?.value||0)<=0)){
-    if(summary){summary.hidden=false;summary.textContent=lang==='ku'?'هەڵە لە لیستی نرخی بەرهەمەکان هەیە؛ تکایە نرخەکان بپشکنە.':lang==='ar'?'يوجد خطأ في أسعار المعدات؛ يرجى مراجعة قائمة الأسعار.':'Equipment price data is incomplete. Please check the product prices.';}
-    return;
-  }
-  // Prepare protection options only after the complete equipment selection exists.
-  calculateSolar();
-  const dcProtectionCost=String(pricing.services.dcProtection[phase]);
-  const acProtectionCost=String(pricing.services.acProtection[phase]);
-  const dc=document.getElementById('calcDcProtection'),ac=document.getElementById('calcAcProtection');
-  if(dc)dc.value=dcProtectionCost;if(ac)ac.value=acProtectionCost;
-  const transportValue=document.getElementById('easyTransport')?.value||'50';
-  const advancedTransport=document.getElementById('calcTransport');if(advancedTransport)advancedTransport.value=transportValue;
-  calculateSolar();
-
-  const panelText=document.querySelector('#calcPanel option:checked')?.textContent.split('—')[0].trim()||'';
-  const invText=document.querySelector('#calcInverter option:checked')?.textContent.split('—')[0].trim()||inverterName;
-  const batteryText=batteries?document.querySelector('#calcBattery option:checked')?.textContent.split('—')[0].trim():'—';
-  if(summary){
-    const labels=lang==='ku'?['فەیز','پانێڵ','ئینڤێرتەر','پاتری','پاراستنی DC و AC','گواستنەوە','کۆی نرخ']:lang==='ar'?['الطور','الألواح','العاكس','البطارية','حماية DC وAC','النقل','السعر الإجمالي']:['Phase','Panels','Inverter','Battery','DC & AC protection','Transport','Total'];
-    const transportText=document.querySelector('#easyTransport option:checked')?.textContent||'';
-    const phaseText=document.querySelector('#easyPhase option:checked')?.textContent||'';
-    summary.hidden=false;summary.innerHTML=`<strong>${labels[0]}:</strong> ${phaseText}<br><strong>${labels[1]}:</strong> ${panels} × ${panelText}<br><strong>${labels[2]}:</strong> ${inverterUnits} × ${invText}<br><strong>${labels[3]}:</strong> ${batteries} × ${batteryText}<br><strong>${labels[4]}:</strong> ${(Number(dcProtectionCost)+Number(acProtectionCost))*inverterUnits}<br><strong>${labels[5]}:</strong> ${transportText}<br><strong>${labels[6]}:</strong> ${document.getElementById('calcTotal')?.textContent||'$0'}`;
-  }
-}
-
-function resetEasySolar(){
-  const day=document.getElementById('easyDayAmps'),night=document.getElementById('easyNightAmps');
-  if(day)day.value='0';if(night)night.value='0';
-  const phase=document.getElementById('easyPhase'),transport=document.getElementById('easyTransport');
-  if(phase)phase.value='single';if(transport)transport.value='50';
-  const high=document.querySelector('input[name="easyQuality"][value="high"]');if(high)high.checked=true;
-  const summary=document.getElementById('easySummary');if(summary){summary.hidden=true;summary.innerHTML=''}
-  resetSolarCalculator();
-}
-
-function sendEasySolarToWhatsApp(){
-  const day=parseFloat(document.getElementById('easyDayAmps')?.value)||0;
-  const night=parseFloat(document.getElementById('easyNightAmps')?.value)||0;
-  if(day<=0&&night<=0){calculateEasySolar();return}
-  calculateEasySolar();
-  sendCalculatorToWhatsApp();
-}
-
-function calculateSolar() {
-  const pricing=window.ALO_PRICING;
-  const get = id => document.getElementById(id);
-  const calcLang=document.documentElement.lang||'en';
-  const c=calculatorTranslations[calcLang]||calculatorTranslations.en;
-  const panelCount = Math.max(0, parseInt(get('calcKwh')?.value) || 0);
-  const panel = get('calcPanel');
-  const systemType = get('calcSystemType')?.value || 'single';
-  const phase = systemType.toLowerCase().includes('3') || systemType.toLowerCase().includes('three') ? '3ph' : 'single';
-
-  const panelW = parseFloat(panel?.selectedOptions?.[0]?.dataset?.watts || 0);
-  const panelPrice = parseFloat(panel?.value || 0);
-  const pvKw = panelCount * panelW / 1000;
-  const recommendedKw = panelCount > 0 && panelW > 0 ? Math.max(1, Math.ceil(pvKw * 2) / 2) : 0;
-
-  const inverter = get('calcInverter');
-  if (inverter) {
-    const manualSelected = inverter.dataset.manualSelected === '1';
-    const options = Array.from(inverter.options).filter(o => o.value !== '');
-    options.forEach(o => {
-      const optPhase = o.dataset.phase || 'single';
-      o.hidden = optPhase !== 'all' && optPhase !== phase;
-      o.disabled = optPhase !== 'all' && optPhase !== phase;
-    });
-    const currentOption=inverter.selectedOptions?.[0];
-    if(currentOption&&currentOption.dataset.phase!=='all'&&currentOption.dataset.phase!==phase)inverter.value='';
-  }
-
-  const selectedInv = inverter?.selectedOptions?.[0];
-  const inverterPrice = parseFloat(selectedInv?.value || 0);
-  const inverterUnits = Math.max(1,parseInt(inverter?.dataset?.easyUnits||'1')||1);
-  const inverterKw = parseFloat(selectedInv?.dataset?.kw || 0);
-  const inverterName = selectedInv ? selectedInv.textContent.trim() : 'Not selected';
-
-  const battery = get('calcBattery');
-  const batteryUnitPrice = parseFloat(battery?.value || 0);
-  const batteryQtyField = get('calcBatteryQty');
-  let batteryQty = Math.max(0, parseInt(batteryQtyField?.value || 0) || 0);
-  // Preserve intentionally selected zero batteries (e.g. day-only usage).
-  if (batteryUnitPrice === 0) {
-    batteryQty = 0;
-    if (batteryQtyField) batteryQtyField.value = '0';
-  }
-  const batteryCost = batteryUnitPrice * batteryQty;
-  const batteryBusbarCost = batteryQty >= pricing.services.batteryBusbar.minimumBatteries ? pricing.services.batteryBusbar.price : 0;
-  const batteryBusbarField = get('calcBatteryBusbar');
-  const batteryBusbarLabel = get('calcBatteryBusbarLabel');
-  if (batteryBusbarField) batteryBusbarField.value = batteryBusbarCost;
-  if (batteryBusbarLabel) batteryBusbarLabel.textContent = `${c.batteryBusbar} — $${batteryBusbarCost}`;
-
-  // Requested prices:
-  // Structure $45/panel; DC Protection $75 single / $100 three;
-  // AC Protection $75 single / $100 three; Solar cable $1.25/m;
-  // AC cable 4x6mm $5/m; Installation $15/panel;
-  // Transport $50 Erbil / $75 outside; Other Electrical $100 up to 16 panels, $150 above 16.
-  const dcProtection = get('calcDcProtection');
-  const acProtection = get('calcAcProtection');
-  [[dcProtection,pricing.services.dcProtection[phase]],[acProtection,pricing.services.acProtection[phase]]].forEach(([select,value])=>{
-    const label=phase==='3ph'?`${c.three} — $${value}`:`${c.single} — $${value}`;
-    if(select&&(select.dataset.phase!==phase||select.dataset.price!==String(value))){const wasEnabled=Number(select.value)>0;select.innerHTML=`<option value="0">Not selected — $0</option><option value="${value}">${label}</option>`;select.value=wasEnabled?String(value):'0';select.dataset.phase=phase;select.dataset.price=String(value);}
-  });
-
-  const dcCost = parseFloat(dcProtection?.value||0) * inverterUnits;
-  const acCost = parseFloat(acProtection?.value||0) * inverterUnits;
-  const cableMeters = parseFloat(get('calcCable')?.value || 0);
-  const acCableMeters = parseFloat(get('calcAcCable')?.value || 0);
-  const cableCost = cableMeters * pricing.services.solarCablePerMeter;
-  const acCableCost = acCableMeters * pricing.services.acCablePerMeter;
-  const transportCost = parseFloat(get('calcTransport')?.value || 0);
-  const otherElectricCost = panelCount > 16 ? pricing.services.otherElectrical.above16Panels : (panelCount > 0 ? pricing.services.otherElectrical.upTo16Panels : 0);
-  const otherElectricField = get('calcOtherElectric');
-  const otherElectricLabel = get('calcOtherElectricLabel');
-  if (otherElectricField) otherElectricField.value = otherElectricCost;
-  if (otherElectricLabel) otherElectricLabel.textContent = `${c.other} — $${otherElectricCost}`;
-
-  const structureCost = panelCount * pricing.services.structurePerPanel;
-  const installCost = panelCount * pricing.services.installationPerPanel;
-
-  const total = panelCount * panelPrice + (inverterPrice*inverterUnits) + batteryCost + structureCost +
-                dcCost + acCost + cableCost + acCableCost + installCost +
-                transportCost + otherElectricCost + batteryBusbarCost;
-
-  const rec = get('calcRecommendation');
-  const breakdown = get('calcBreakdown');
-  const totalEl = get('calcTotal');
-
-  if (rec) {
-    const warning = inverterKw && inverterKw < recommendedKw
-      ? `<div style="margin-top:8px;color:#b45309;">⚠️ Selected inverter (${inverterKw} kW) is smaller than the recommended PV size (${recommendedKw} kW).</div>`
-      : '';
-    rec.innerHTML = `<strong>${c.recommendedPv}:</strong> ${panelCount} (${pvKw.toFixed(2)} kW)<br>
-      <strong>${c.systemLine}:</strong> ${phase === '3ph' ? c.three : c.single}<br>
-      <strong>${c.inverterLine}:</strong> ${inverterUnits>1?inverterUnits+' × ':''}${inverterName}${inverterKw ? ` (${inverterKw} kW)` : ''}${warning}`;
-  }
-
-  if (breakdown) {
-    breakdown.innerHTML = `
-      <div>${c.solarPanels}: $${(panelCount * panelPrice).toFixed(2)}</div>
-      <div>${c.structure}: $${structureCost.toFixed(2)} ($${pricing.services.structurePerPanel} × ${panelCount})</div>
-      <div>${c.inverterLine}: $${(inverterPrice*inverterUnits).toFixed(2)} (${inverterUnits} × $${inverterPrice.toFixed(2)})</div>
-      <div>${c.batteryLine}: $${batteryCost.toFixed(2)} (${batteryQty} × $${batteryUnitPrice.toFixed(2)})</div>
-      <div>${c.batteryBusbar}: $${batteryBusbarCost.toFixed(2)}</div>
-      <div>${c.dcLine}: $${dcCost.toFixed(2)}</div>
-      <div>${c.acLine}: $${acCost.toFixed(2)}</div>
-      <div>${c.other}: $${otherElectricCost.toFixed(2)}</div>
-      <div>${c.solarCableLine}: $${cableCost.toFixed(2)} ($1.25/m × ${cableMeters}m)</div>
-      <div>${c.acCableLine}: $${acCableCost.toFixed(2)} ($5/m × ${acCableMeters}m)</div>
-      <div>${c.installation}: $${installCost.toFixed(2)} ($15 × ${panelCount})</div>
-      <div>${c.transportLine}: $${transportCost.toFixed(2)}</div>
-    `;
-  }
-
-  const warrantyEl = get('calcWarranty');
-  if (warrantyEl) {
-    const panelWarranty = document.querySelector('#calcPanel option:checked')?.dataset.warranty || '15 Years Warranty';
-    const inverterWarranty = document.querySelector('#calcInverter option:checked')?.dataset.warranty || '5 Years Warranty';
-    const batteryWarranty = batteryQty > 0 ? (document.querySelector('#calcBattery option:checked')?.dataset.warranty || 'No Warranty') : 'No Warranty';
-    warrantyEl.innerHTML = `
-      <div class="warranty-item"><span>${c.solarPanel}</span><b>${panelWarranty}</b></div>
-      <div class="warranty-item"><span>${c.inverterLine}</span><b>${inverterWarranty}</b></div>
-      <div class="warranty-item"><span>${c.batteryLine}</span><b>${batteryWarranty}</b></div>
-    `;
-  }
-
-  if (totalEl){totalEl.textContent = `$${total.toFixed(2)}`;totalEl.dataset.usd=String(total)}
-  calculatePayback();
-}
-
-function calculatePayback(){
-  const get=id=>document.getElementById(id);
-  const result=get('paybackResult');if(!result)return;
-  const lang=document.documentElement.lang||'en';
-  const monthly=Math.max(0,parseFloat(get('monthlyElectricityBill')?.value)||0);
-  const systemUsd=Math.max(0,parseFloat(get('calcTotal')?.dataset?.usd)||0);
-  const annual=monthly*12;
-  const fmt=n=>Math.round(n).toLocaleString(lang==='ar'?'ar-IQ':'en-US');
-  const t=lang==='ku'
-    ? {monthly:'جیاوازی نرخی مانگانە',annual:'جیاوازی نرخی ساڵانە',cost:'نرخی سیستەم',enter:'نرخی سیستەم و پارەدانی مانگانەی کارەبا داخڵ بکە.',returns:'بەپێی ئەم خەمڵاندنە، نرخی سیستەمەکە لە نزیکەی {y} ساڵ و {m} مانگدا دەگەڕێتەوە.'}
-    :lang==='ar'
-    ? {monthly:'التوفير الشهري',annual:'التوفير السنوي',cost:'تكلفة النظام',enter:'أدخل تكلفة النظام وتكلفة الكهرباء الشهرية.',returns:'حسب هذا التقدير، يسترد النظام تكلفته خلال نحو {y} سنة و{m} شهر.'}
-    : {monthly:'Monthly savings',annual:'Annual savings',cost:'System cost',enter:'Enter a system cost and your monthly electricity payment.',returns:'At this estimate, the system pays for itself in about {y} years and {m} months.'};
-  if(systemUsd<=0||monthly<=0){result.innerHTML=`<div class="payback-message payback-warning">${t.enter}</div>`;return}
-  const months=Math.ceil(systemUsd/monthly),years=Math.floor(months/12),remaining=months%12;
-  const message=t.returns.replace('{y}',years).replace('{m}',remaining);
-  result.innerHTML=`<div class="payback-stat"><span>${t.monthly}</span><strong>$${fmt(monthly)}</strong></div><div class="payback-stat"><span>${t.annual}</span><strong>$${fmt(annual)}</strong></div><div class="payback-stat"><span>${t.cost}</span><strong>$${fmt(systemUsd)}</strong></div><div class="payback-message">☀️ ${message}</div>`;
-}
-
-function resetSolarCalculator() {
-  const defaults={calcKwh:'0',calcType:'hybrid',calcBattery:'0',calcBatteryQty:'0',calcPanel:'',calcSystemType:'single',calcInverter:'',calcDcProtection:'0',calcAcProtection:'0',calcCable:'0',calcAcCable:'0',calcTransport:'0'};
-  Object.entries(defaults).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.value=value;});
-  const inverter=document.getElementById('calcInverter');
-  if(inverter){delete inverter.dataset.manualSelected;delete inverter.dataset.easyUnits;}
-  const monthlyElectricityBill=document.getElementById('monthlyElectricityBill');
-  if(monthlyElectricityBill)monthlyElectricityBill.value='0';
-  calculateSolar();
-  if(typeof window.showCalculatorStep==='function')window.showCalculatorStep(0);
-  window.setTimeout(()=>{
-    const calculator=document.getElementById('calculator');
-    if(calculator){
-      const headerOffset=document.querySelector('header')?.offsetHeight||78;
-      const top=calculator.getBoundingClientRect().top+window.scrollY-headerOffset;
-      window.scrollTo({top,behavior:'smooth'});
-    }
-  },60);
-}
-
-function sendCalculatorToWhatsApp() {
-  calculateSolar();
-  const get=id=>document.getElementById(id);
-  const lang=document.documentElement.lang||'en';
-  const labels=lang==='ku'
-    ? {title:'داواکاری سیستەمی وزەی خۆر',panels:'ژمارەی پانێڵ',panel:'جۆری پانێڵ',phase:'جۆری فەیز',inverter:'ئینڤێرتەر',battery:'پاتری',qty:'ژمارەی پاتری',cable:'کێبڵی خۆری',acCable:'کێبڵی AC',transport:'گواستنەوە',total:'کۆی نرخ',monthlyBill:'پارەدانی مانگانەی کارەبا',payback:'ماوەی گەڕانەوەی تێچووی سیستەم'}
-    : lang==='ar'
-    ? {title:'طلب نظام طاقة شمسية',panels:'عدد الألواح',panel:'نوع اللوح',phase:'نوع الطور',inverter:'العاكس',battery:'البطارية',qty:'عدد البطاريات',cable:'الكابل الشمسي',acCable:'كابل AC',transport:'النقل',total:'السعر الإجمالي',monthlyBill:'تكلفة الكهرباء الشهرية',payback:'مدة استرداد الاستثمار'}
-    : {title:'Solar System Request',panels:'Number of panels',panel:'Panel',phase:'Phase',inverter:'Inverter',battery:'Battery',qty:'Battery quantity',cable:'Solar cable',acCable:'AC cable',transport:'Transport',total:'Total price',monthlyBill:'Monthly electricity payment',payback:'Estimated payback'};
-  const selectedText=id=>get(id)?.selectedOptions?.[0]?.textContent.trim()||'';
-  const lines=[
-    `*${labels.title}*`,
-    `${labels.panels}: ${get('calcKwh')?.value||0}`,
-    `${labels.panel}: ${selectedText('calcPanel')}`,
-    `${labels.phase}: ${selectedText('calcSystemType')}`,
-    `${labels.inverter}: ${Math.max(1,parseInt(get('calcInverter')?.dataset?.easyUnits||'1')||1)} × ${selectedText('calcInverter')}`,
-    `${labels.battery}: ${selectedText('calcBattery')}`,
-    `${labels.qty}: ${get('calcBatteryQty')?.value||0}`,
-    `${labels.cable}: ${get('calcCable')?.value||0} m`,
-    `${labels.acCable}: ${get('calcAcCable')?.value||0} m`,
-    `${labels.transport}: ${selectedText('calcTransport')}`,
-    `${labels.total}: ${get('calcTotal')?.textContent||'$0'}`,
-    `${labels.monthlyBill}: $${(parseFloat(get('monthlyElectricityBill')?.value)||0).toLocaleString()}`,
-    `${labels.payback}: ${get('paybackResult')?.innerText.trim()||'—'}`
-  ];
-  openTrustedWhatsApp('https://wa.me/9647764400440?text='+encodeURIComponent(lines.join('\n')));
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.getElementById('calcCalculateBtn')?.addEventListener('click',calculateSolar);
-  document.getElementById('calcResetBtn')?.addEventListener('click',resetSolarCalculator);
-  document.getElementById('calcWhatsAppBtn')?.addEventListener('click',sendCalculatorToWhatsApp);
-  document.getElementById('easyModeBtn')?.addEventListener('click',()=>setCalculatorMode('easy'));
-  document.getElementById('advancedModeBtn')?.addEventListener('click',()=>setCalculatorMode('advanced'));
-  document.getElementById('easyCalculateBtn')?.addEventListener('click',calculateEasySolar);
-  document.getElementById('easyResetBtn')?.addEventListener('click',resetEasySolar);
-  document.getElementById('easyWhatsAppBtn')?.addEventListener('click',sendEasySolarToWhatsApp);
-  document.getElementById('easyTransport')?.addEventListener('change',()=>{if((parseFloat(document.getElementById('easyDayAmps')?.value)||0)>0||(parseFloat(document.getElementById('easyNightAmps')?.value)||0)>0)calculateEasySolar()});
-  document.getElementById('easyPhase')?.addEventListener('change',()=>{if((parseFloat(document.getElementById('easyDayAmps')?.value)||0)>0||(parseFloat(document.getElementById('easyNightAmps')?.value)||0)>0)calculateEasySolar()});
-  ['easyDayAmps','easyNightAmps'].forEach(id=>document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')calculateEasySolar()}));
-  document.querySelectorAll('input[name="easyQuality"]').forEach(el=>el.addEventListener('change',()=>{if((parseFloat(document.getElementById('easyDayAmps')?.value)||0)>0||(parseFloat(document.getElementById('easyNightAmps')?.value)||0)>0)calculateEasySolar()}));
-  setCalculatorMode(localStorage.getItem('aloCalculatorMode')||'easy');
-  const inv = document.getElementById('calcInverter');
-  const system = document.getElementById('calcSystemType') || document.getElementById('systemType');
-  if (inv) inv.addEventListener('change', function(){ inv.dataset.manualSelected = '1'; if (typeof calculateSolar === 'function') calculateSolar(); });
-  if (system) system.addEventListener('change', function(){
-    if (inv) { delete inv.dataset.manualSelected; delete inv.dataset.easyUnits; }
-    if (typeof calculateSolar === 'function') calculateSolar();
-  });
-  ['calcKwh','calcPanel','calcBattery','calcBatteryQty','calcDcProtection','calcAcProtection','calcCable','calcAcCable','calcTransport','calcSystemType']
-    .forEach(id => { const el=document.getElementById(id); if(el) el.addEventListener('input', calculateSolar); });
-  document.getElementById('monthlyElectricityBill')?.addEventListener('input',calculatePayback);
-  if (typeof calculateSolar === 'function') calculateSolar();
-});
-</script>
-
-<link rel="stylesheet" href="ai-modes.css?v=20261004-logoonly2">
-<script src="/alo-ai-chat.js?v=2" defer></script>
-
-<script>
-/* Progressive calculator and unified contact control */
-document.addEventListener('DOMContentLoaded',function(){
-  const card=document.querySelector('.advanced-calc-card');
-  if(card&&!card.querySelector('.calc-progress')){
-    const progress=document.createElement('div');
-    progress.className='calc-progress';
-    progress.innerHTML='<div class="calc-progress-item active" data-step="1"><span class="lang-en">System</span><span class="lang-ku">سیستەم</span><span class="lang-ar">النظام</span></div><div class="calc-progress-item" data-step="2"><span class="lang-en">Equipment</span><span class="lang-ku">ئامێرەکان</span><span class="lang-ar">المعدات</span></div><div class="calc-progress-item" data-step="3"><span class="lang-en">Installation</span><span class="lang-ku">دامەزراندن</span><span class="lang-ar">التركيب</span></div>';
-    card.querySelector('h3').after(progress);
-    const blocks=[...card.querySelectorAll(':scope > .calc-field,:scope > .calc-row,:scope > .calc-actions')];
-    const groups=[blocks.slice(0,2),blocks.slice(2,6),blocks.slice(6)];
-    const titles=[['System basics','بنەمای سیستەم','أساسيات النظام'],['Main equipment','ئامێرە سەرەکییەکان','المعدات الرئيسية'],['Installation details','وردەکاری دامەزراندن','تفاصيل التركيب']];
-    const steps=groups.map((group,index)=>{
-      const step=document.createElement('div');step.className='calc-step'+(index===0?' active':'');step.dataset.calcStep=index;
-      step.innerHTML='<h4 class="calc-step-title"><span class="lang-en">'+titles[index][0]+'</span><span class="lang-ku">'+titles[index][1]+'</span><span class="lang-ar">'+titles[index][2]+'</span></h4>';
-      group.forEach(node=>step.appendChild(node));card.appendChild(step);
-      if(index<2){const nav=document.createElement('div');nav.className='step-nav';nav.innerHTML=(index?'<button class="btn step-back" type="button">‹ <span class="lang-en">Back</span><span class="lang-ku">گەڕانەوە</span><span class="lang-ar">رجوع</span></button>':'')+'<button class="btn btn-primary step-next" type="button"><span class="lang-en">Next</span><span class="lang-ku">دواتر</span><span class="lang-ar">التالي</span> ›</button>';step.appendChild(nav)}
-      else {const nav=document.createElement('div');nav.className='step-nav';nav.innerHTML='<button class="btn step-back" type="button">‹ <span class="lang-en">Back</span><span class="lang-ku">گەڕانەوە</span><span class="lang-ar">رجوع</span></button>';step.insertBefore(nav,step.querySelector('.calc-actions'))}
-      return step;
-    });
-    let current=0;
-    function show(index){current=Math.max(0,Math.min(2,index));steps.forEach((s,i)=>s.classList.toggle('active',i===current));progress.querySelectorAll('.calc-progress-item').forEach((p,i)=>{p.classList.toggle('active',i===current);p.classList.toggle('done',i<current)});card.scrollIntoView({behavior:'smooth',block:'start'});}
-    window.showCalculatorStep=show;
-    card.addEventListener('click',e=>{if(e.target.closest('.step-next'))show(current+1);if(e.target.closest('.step-back'))show(current-1)});
-  }
-  const hub=document.getElementById('contactHub'),hubMain=hub?.querySelector('.hub-main'),hubAi=document.getElementById('hubAi'),aiToggle=document.getElementById('aiChatToggle');
-  hubMain?.addEventListener('click',()=>{const open=hub.classList.toggle('open');hubMain.setAttribute('aria-expanded',String(open))});
-  hubAi?.addEventListener('click',()=>{hub.classList.remove('open');hubMain.setAttribute('aria-expanded','false');aiToggle?.click()});
-  document.addEventListener('click',e=>{if(hub&&!hub.contains(e.target)){hub.classList.remove('open');hubMain?.setAttribute('aria-expanded','false')}});
-  document.querySelectorAll('.faq-item').forEach(item=>item.addEventListener('toggle',()=>{
-    if(item.open)document.querySelectorAll('.faq-item').forEach(other=>{if(other!==item)other.open=false});
-  }));
-  const welcomeRobot=document.getElementById('aloRobotWelcome');
-  const welcomeLogo=document.getElementById('aloRobotLogo');
-  const companyLogo=document.querySelector('.brand img');
-  if(welcomeLogo&&companyLogo)welcomeLogo.src=companyLogo.src;
-  window.setTimeout(()=>welcomeRobot?.classList.add('show'),2800);
-  document.getElementById('aloRobotClose')?.addEventListener('click',()=>{
-    welcomeRobot?.classList.remove('show');
-    if(welcomeRobot)welcomeRobot.style.display='none';
-  });
-});
-</script>
-
-<script src="/pwa-register.js?v=2" defer></script>
-<link rel="stylesheet" href="layout-refined.css?v=1"><style id="solutions-live-style">#solutions .sol-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0 0 28px}#solutions .sol-controls p{flex-basis:100%;text-align:center;color:#c4d1c8;font-size:13px}#solutions .sol-controls button{border:1px solid #e7c65a40;background:#10241a;color:#e4ece7;padding:10px 18px;border-radius:12px;min-height:44px;font:inherit;cursor:pointer}#solutions .sol-controls button[aria-pressed=true]{background:#e7c65a;color:#07110d}#solutions .sol-controls button:focus-visible{outline:3px solid white;outline-offset:3px}#solutions .sol-demo{margin-top:24px;border-top:1px solid #ffffff20;padding-top:20px}#solutions .sol-flow{display:flex;align-items:center;gap:8px}#solutions .sol-node{display:grid;gap:4px;text-align:center;min-width:64px;font-size:12px}#solutions .sol-node b{font-size:34px;color:#e7c65a;line-height:1.3}#solutions .sol-wire{flex:1;height:3px;background:#577060;position:relative;overflow:hidden}#solutions .sol-wire i{position:absolute;top:0;width:14px;height:3px;background:#e7c65a;animation:sol-energy 1.8s linear infinite;left:-15px}#solutions .sol-wire i:nth-child(2){animation-delay:.6s}#solutions .sol-wire i:nth-child(3){animation-delay:1.2s}#solutions .stopped{opacity:.5}#solutions .stopped .sol-wire i{display:none}#solutions .sol-status{font-size:13px;line-height:1.9;min-height:74px;margin:18px 0 0}#solutions .sol-note{font-size:12px;line-height:1.9;text-align:center;margin:24px auto 0;max-width:850px;color:#b6c8bc}@keyframes sol-energy{to{left:100%}}@media(prefers-reduced-motion:reduce){#solutions .sol-wire i{animation:none;left:45%}}@media(max-width:600px){#solutions .sol-controls button{flex:1 1 40%}#solutions .sol-status{min-height:0}}
-
-#solutions .sol-demo svg{width:100%;height:auto;display:block;overflow:visible}#solutions .sol-demo svg rect{fill:#132c20;stroke:#d7bd6455}#solutions .sol-demo svg text{fill:#edf5ef;text-anchor:middle;font:10px sans-serif}#solutions .sol-demo svg .sol-icon{font-size:22px;fill:#e7c65a}#solutions .sol-muted{opacity:.35}#solutions .sol-track{fill:none;stroke:#ffffff15;stroke-width:3}#solutions .sol-current{fill:none;stroke:#edce67;stroke-width:3;stroke-dasharray:7 10;opacity:0}#solutions .sol-current.sol-on{opacity:1;animation:sol-dash 1s linear infinite}#solutions .sol-current.green{stroke:#5ce6a2}#solutions .sol-current.blue{stroke:#68bbff}#solutions .sol-status div{padding:5px 8px;margin:5px 0;background:#ffffff07;border-radius:6px}#solutions .sol-status{min-height:115px}#solutions .grid3>.card{min-width:0}@keyframes sol-dash{to{stroke-dashoffset:-34}}@media(prefers-reduced-motion:reduce){#solutions .sol-current.sol-on{animation:none}}
-</style>
-<script id="solutions-live-script">(()=>{const section=document.getElementById('solutions');if(!section)return;let day=true,grid=true,exportOn=false;
-const texts={en:['Educational simulation','Day: surplus solar','Night','Grid available','Grid outage','Allow export*','Solar panels','Inverter','Home','Battery','Grid','Charging battery','Battery supplying home','Exporting surplus','Grid supplying home','No supply during outage','No battery','Independent of grid','Export disabled','*Export requires utility permission and compatible equipment/settings. Assumes sufficient solar by day and battery charge at night. Hybrid backup requires a configured backup output. This is an illustration, not live measurements.','Solar supplies home','Battery on standby'],ku:['نموونەی فێرکاری','ڕۆژ: وزەی زیادەی خۆر','شەو','تۆڕ بەردەستە','تۆڕ پچڕاوە','ناردن بۆ تۆڕ*','پانێڵەکان','ئینڤێرتەر','ماڵ','پاتری','تۆڕی کارەبا','پاتری شەحن دەکرێت','پاتری کارەبای ماڵ دابین دەکات','وزەی زیادە بۆ تۆڕ دەنێردرێت','تۆڕ کارەبای ماڵ دابین دەکات','لە کاتی پچڕانی تۆڕ کارەبا دابین ناکرێت','پاتری نییە','پەیوەندی بە تۆڕەوە نییە','ناردن بۆ تۆڕ ناچالاکە','*ناردنی وزە بۆ تۆڕ پێویستی بە ڕێگەپێدان و ڕێکخستنی گونجاوی سیستەم هەیە. لەم نموونەیەدا وا دادەنرێت کە لە ڕۆژدا خۆری بەس هەیە و پاتری بۆ شەو شەحن کراوە. پشتیوانی Hybrid ـیش پێویستی بە دەرچەی Backup ـی ڕێکخراو هەیە. ئەمە تەنها نموونەی ڕوونکردنەوەیە، نە داتای ڕاستەوخۆ.','خۆر کارەبای ماڵ دابین دەکات','پاتری ئامادەی پشتیوانییە'],ar:['محاكاة تعليمية','نهار: فائض شمسي','ليل','الشبكة متوفرة','انقطاع الشبكة','السماح بالتصدير*','الألواح','العاكس','المنزل','البطارية','الشبكة','شحن البطارية','البطارية تغذي المنزل','تصدير الفائض للشبكة','الشبكة تغذي المنزل','لا تغذية أثناء الانقطاع','بدون بطارية','مستقل عن الشبكة','التصدير معطل','*يتطلب التصدير موافقة الشبكة وأجهزة وإعدادات مناسبة. يفترض توفر شمس كافية نهاراً وشحن كافٍ ليلاً. احتياط Hybrid يحتاج خرجاً احتياطياً مهيأً. هذا توضيح وليس قياسات حية.','الشمس تغذي المنزل','البطارية في الاستعداد']};
-const toolbar=section.querySelector('.sol-controls')||document.createElement('div');toolbar.className='sol-controls';const cards=[...section.querySelectorAll('.grid3>.card')];section.querySelector('.grid3').before(toolbar);cards.forEach(c=>{if(!c.querySelector('.sol-demo')){const e=document.createElement('div');e.className='sol-demo';c.append(e)}});const note=section.querySelector('.sol-note')||document.createElement('p');note.className='sol-note';section.querySelector('.grid3').after(note);
-function render(){const d=texts[document.documentElement.lang]||texts.en;toolbar.replaceChildren();const title=document.createElement('p');title.textContent=d[0];toolbar.append(title);[[1,day,()=>day=true],[2,!day,()=>day=false],[3,grid,()=>grid=true],[4,!grid,()=>grid=false],[5,exportOn,()=>exportOn=!exportOn]].forEach(([label,on,fn])=>{const b=document.createElement('button');b.type='button';b.textContent=d[label];b.setAttribute('aria-pressed',on);b.onclick=()=>{fn();render()};toolbar.append(b)});
-cards.forEach((card,i)=>{const battery=i!==0,connected=i!==1,powered=i!==0||grid,solar=day&&powered,discharge=battery&&!day&&(!connected||!grid),importing=connected&&grid&&!day,exp=connected&&grid&&solar&&exportOn;
-const node=(x,y,label,icon,dim=false)=>`<g class="${dim?'sol-muted':''}"><rect x="${x-48}" y="${y-28}" width="96" height="56" rx="12"/><text x="${x}" y="${y-5}" class="sol-icon">${icon}</text><text x="${x}" y="${y+16}">${label}</text></g>`;
-const wire=(path,on,color='gold')=>`<path d="${path}" class="sol-track"/><path d="${path}" class="sol-current ${on?'sol-on':''} ${color}"/>`;
-let svg=`<svg viewBox="0 0 360 330" role="img" aria-label="${d[0]}" dir="ltr">`;
-svg+=wire('M180 66 V130',solar)+wire('M228 158 H300 V244',powered)+wire(discharge?'M60 244 V158 H132':'M132 158 H60 V244',battery&&(solar||discharge),'green')+wire(importing?'M180 274 V186':'M180 186 V274',importing||exp,'blue');
-svg+=node(180,38,d[6],'☀',!solar)+node(180,158,d[7],'↔')+node(300,272,d[8],'⌂',!powered)+node(60,272,battery?d[9]:d[16],'▣',!battery)+node(180,302,connected?d[10]:d[17],'⚡',!connected||!grid)+(!battery?'<path d="M30 244 L90 286 M90 244 L30 286" stroke="#ff6868" stroke-width="5" stroke-linecap="round"/>':'')+'</svg>';
-const statuses=[];if(!powered)statuses.push(d[15]);else{statuses.push(solar?d[20]:discharge?d[12]:d[14]);if(battery)statuses.push(solar?d[11]:discharge?d[12]:d[21]);if(connected)statuses.push(exp?d[13]:exportOn?({en:'Export waiting: needs daylight and an available grid',ku:'گەڕاندنەوە چاوەڕوانە: پێویستی بە ڕۆژ و هەبوونی تۆڕ هەیە',ar:'التصدير ينتظر: يحتاج نهاراً وشبكة متوفرة'}[document.documentElement.lang]||'Export waiting: needs daylight and an available grid'):d[18]);}
-card.querySelector('.sol-demo').innerHTML=svg+'<div class="sol-status" role="status">'+[...new Set(statuses)].map(x=>'<div>'+x+'</div>').join('')+'</div>';});note.textContent=d[19];}
-new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});render();})();</script>
-
-<!-- Pricing is loaded once by prices.js. No duplicate forced refresh. -->
-
-<script>
-/* Preserve the customer's in-progress calculator draft across accidental
-   page reloads and asynchronous option refreshes. Explicit Reset clears it. */
-(function(){
-  const storageKey='aloSolarCalculatorDraftV2';
-  const ids=['easyDayAmps','easyNightAmps','easyPhase','easyTransport',
-    'calcKwh','calcType','calcSystemType','calcBatteryQty',
-    'calcCable','calcAcCable','calcTransport','monthlyElectricityBill'];
-  const productIds=['calcPanel','calcInverter','calcBattery'];
-  let restoring=false;
-  let explicitReset=false;
-  let userEdited=false;
-  let initialRestoreDone=false;
-  const get=id=>document.getElementById(id);
-  function save(){
-    if(restoring||explicitReset)return;
-    const fields={};
-    ids.forEach(id=>{if(get(id))fields[id]=get(id).value});
-    productIds.forEach(id=>{const el=get(id),option=el?.selectedOptions?.[0];if(el)fields[id]={
-      id:option?.dataset?.id||'',value:el.value
-    }});
-    fields.quality=document.querySelector('input[name="easyQuality"]:checked')?.value||'high';
-    fields.mode=get('calculator')?.classList.contains('easy-mode')?'easy':'advanced';
-    fields.inverterUnits=get('calcInverter')?.dataset.easyUnits||'';
-    fields.hasResult=!!get('easySummary')&&!get('easySummary').hidden;
-    fields.lastSaved=Date.now();
-    try{localStorage.setItem(storageKey,JSON.stringify(fields))}catch(e){}
-  }
-  function restore(){
-    if(userEdited || initialRestoreDone)return;
-    let data;try{data=JSON.parse(localStorage.getItem(storageKey)||'null')}catch(e){}
-    if(!data)return;
-    restoring=true;
-    try{
-      ids.forEach(id=>{const el=get(id);if(el&&data[id]!==undefined)el.value=data[id]});
-      productIds.forEach(id=>{
-        const el=get(id),saved=data[id];if(!el||!saved)return;
-        const opts=Array.from(el.options);
-        const selected=saved.id?opts.find(o=>o.dataset.id===saved.id):opts.find(o=>o.value===saved.value);
-        if(selected)el.selectedIndex=selected.index;
-      });
-      const quality=document.querySelector('input[name="easyQuality"][value="'+data.quality+'"]');
-      if(quality)quality.checked=true;
-      if(typeof setCalculatorMode==='function')setCalculatorMode(data.mode==='advanced'?'advanced':'easy');
-      const inverter=get('calcInverter');
-      if(inverter){if(data.inverterUnits)inverter.dataset.easyUnits=data.inverterUnits;else delete inverter.dataset.easyUnits}
-      if(data.hasResult&&data.mode==='easy'&&typeof calculateEasySolar==='function')calculateEasySolar();
-      else if(typeof calculateSolar==='function')calculateSolar();
-    }finally{restoring=false;initialRestoreDone=true}
-  }
-  document.addEventListener('DOMContentLoaded',()=>{
-    // Restore after the initial live pricing response when possible; never
-    // overwrite edits made during a pending network request.
-    if(window.ALO_PRICING_LIVE_STATUS && window.ALO_PRICING_LIVE_STATUS!=='loading')restore();
-    else window.addEventListener('alo-pricing-updated',restore,{once:true});
-    // If the pricing endpoint is unavailable, restore using local prices.
-    setTimeout(restore,1600);
-    get('calculator')?.addEventListener('input',()=>{userEdited=true;explicitReset=false;save()});
-    get('calculator')?.addEventListener('change',()=>{userEdited=true;explicitReset=false;save()});
-    // Capture the final calculator result after the button's own handler runs.
-    // This listener is on the parent so it executes after the target handler.
-    get('calculator')?.addEventListener('click',e=>{
-      if(e.target.closest('#easyResetBtn,#calcResetBtn')){
-        // Let the explicit reset finish, then discard the draft. Do not allow
-        // pagehide to persist a reset snapshot over the user's previous quote.
-        explicitReset=true;
-        try{localStorage.removeItem(storageKey)}catch(err){}
-        return;
-      }
-      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn')){userEdited=true;save()}
-    });
-    // Never restore a stale session snapshot in response to a late pricing API
-    // response: the customer may already be typing a newer quote. prices.js
-    // preserves selections by product ID while updating prices.
-    // Restore happens only once on initial page load.
-    window.addEventListener('pagehide',save);
-    // Save early before browser/PWA navigation. Keeping an up-to-date snapshot
-    // also protects against unexpected reloads without depending on pagehide.
-    window.addEventListener('beforeunload',save);
-  });
-})();
-</script>
-</body>
-</html>
-+Number(item.price).toFixed(2);
-    select.appendChild(option);
-  }
-  // Select by identity, never by price (different models can cost the same).
+  const option=Array.from(select.options).find(o=>matcher(o));
+  // Use the exact option index because some inverter models share the same price/value
+  // (for example Deye 12kW single-phase and 3-phase are both $1,700).
   if(option){select.selectedIndex=option.index;option.selected=true;return option}return null;
 }
 
@@ -1395,7 +906,7 @@ function calculateEasySolar(){
   const tier=pricing.qualityTiers?.[quality]||pricing.qualityTiers?.high;
   const panelItem=tier?.panels?.[0];
   // Customer sizing rule: every solar panel is counted as 2 amps of daytime load.
-  const panels=day>0?Math.ceil(day/2):0;
+  const panels=Math.max(1,Math.ceil(day/2));
   selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id);
   document.getElementById('calcKwh').value=panels;
   document.getElementById('calcType').value='hybrid';
@@ -1404,33 +915,30 @@ function calculateEasySolar(){
   const phase=document.getElementById('easyPhase')?.value==='3ph'?'3ph':'single';
   if(phase==='3ph'){
     // Deye is the available 3-phase range in the supplied equipment list.
-    const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
+    const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
-    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }else{
-    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
+    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
-    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }
   document.getElementById('calcSystemType').value=phase;
   const inverterSelect=document.getElementById('calcInverter');
   if(inverterSelect){delete inverterSelect.dataset.manualSelected;delete inverterSelect.dataset.easyUnits}
-  // Select the recommended inverter directly. Recalculation happens after
-  // all Easy Mode fields have been updated to avoid transient invalid states.
+  // Refresh phase filtering before selecting the recommended inverter.
+  calculateSolar();
   const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId);
   if(inverterSelect){inverterSelect.dataset.easyUnits=String(inverterUnits);inverterSelect.dataset.manualSelected='1'}
 
   const smallBattery=pricing.common.batteries[0];
   const tierBattery=tier.batteries[0];
   const batteryItem=night<=6?smallBattery:tierBattery;
-  if(!batteryItem){if(summary){summary.hidden=false;summary.textContent='Battery configuration missing.'}return;}
   const batteryRate=batteryItem.ampsPerHour||60;
   // This 100Ah rule applies to all quality levels: 1–3A = one battery,
   // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
   const batteries=night>0
-    ? (batteryItem.id===smallBattery.id ? (night<=3?1:2) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
+    ? (batteryItem.id===smallBattery.id ? Math.ceil(night/3) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
     : 0;
   if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id)}else{document.getElementById('calcBattery').value='0'}
   const qty=document.getElementById('calcBatteryQty');
@@ -1452,7 +960,7 @@ function calculateEasySolar(){
     const labels=lang==='ku'?['فەیز','پانێڵ','ئینڤێرتەر','پاتری','پاراستنی DC و AC','گواستنەوە','کۆی نرخ']:lang==='ar'?['الطور','الألواح','العاكس','البطارية','حماية DC وAC','النقل','السعر الإجمالي']:['Phase','Panels','Inverter','Battery','DC & AC protection','Transport','Total'];
     const transportText=document.querySelector('#easyTransport option:checked')?.textContent||'';
     const phaseText=document.querySelector('#easyPhase option:checked')?.textContent||'';
-    summary.hidden=false;summary.innerHTML=`<strong>${labels[0]}:</strong> ${phaseText}<br><strong>${labels[1]}:</strong> ${panels} × ${panelText}<br><strong>${labels[2]}:</strong> ${inverterUnits} × ${invText}<br><strong>${labels[3]}:</strong> ${batteries} × ${batteryText}<br><strong>${labels[4]}:</strong> ${(Number(dcProtectionCost)+Number(acProtectionCost))*inverterUnits}<br><strong>${labels[5]}:</strong> ${transportText}<br><strong>${labels[6]}:</strong> ${document.getElementById('calcTotal')?.textContent||'$0'}`;
+    summary.hidden=false;summary.innerHTML=`<strong>${labels[0]}:</strong> ${phaseText}<br><strong>${labels[1]}:</strong> ${panels} × ${panelText}<br><strong>${labels[2]}:</strong> ${inverterUnits} × ${invText}<br><strong>${labels[3]}:</strong> ${batteries} × ${batteryText}<br><strong>${labels[4]}:</strong> $${Number(dcProtectionCost)+Number(acProtectionCost)}<br><strong>${labels[5]}:</strong> ${transportText}<br><strong>${labels[6]}:</strong> ${document.getElementById('calcTotal')?.textContent||'$0'}`;
   }
 }
 
@@ -1512,7 +1020,10 @@ function calculateSolar() {
   const batteryUnitPrice = parseFloat(battery?.value || 0);
   const batteryQtyField = get('calcBatteryQty');
   let batteryQty = Math.max(0, parseInt(batteryQtyField?.value || 0) || 0);
-  // Preserve intentionally selected zero batteries (e.g. day-only usage).
+  if (batteryUnitPrice > 0 && batteryQty === 0) {
+    batteryQty = 1;
+    if (batteryQtyField) batteryQtyField.value = '1';
+  }
   if (batteryUnitPrice === 0) {
     batteryQty = 0;
     if (batteryQtyField) batteryQtyField.value = '0';
@@ -1533,11 +1044,11 @@ function calculateSolar() {
   const acProtection = get('calcAcProtection');
   [[dcProtection,pricing.services.dcProtection[phase]],[acProtection,pricing.services.acProtection[phase]]].forEach(([select,value])=>{
     const label=phase==='3ph'?`${c.three} — $${value}`:`${c.single} — $${value}`;
-    if(select&&(select.dataset.phase!==phase||select.dataset.price!==String(value))){const wasEnabled=Number(select.value)>0;select.innerHTML=`<option value="0">Not selected — $0</option><option value="${value}">${label}</option>`;select.value=wasEnabled?String(value):'0';select.dataset.phase=phase;select.dataset.price=String(value);}
+    if(select&&(select.dataset.phase!==phase||select.dataset.price!==String(value))){select.innerHTML=`<option value="0">Not selected — $0</option><option value="${value}">${label}</option>`;select.dataset.phase=phase;select.dataset.price=String(value);}
   });
 
-  const dcCost = parseFloat(dcProtection?.value||0) * inverterUnits;
-  const acCost = parseFloat(acProtection?.value||0) * inverterUnits;
+  const dcCost = parseFloat(dcProtection?.value||0);
+  const acCost = parseFloat(acProtection?.value||0);
   const cableMeters = parseFloat(get('calcCable')?.value || 0);
   const acCableMeters = parseFloat(get('calcAcCable')?.value || 0);
   const cableCost = cableMeters * pricing.services.solarCablePerMeter;
@@ -1766,87 +1277,6 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
 
 <!-- Pricing is loaded once by prices.js. No duplicate forced refresh. -->
 
-<script>
-/* Preserve the customer's in-progress calculator draft across accidental
-   page reloads and asynchronous option refreshes. Explicit Reset clears it. */
-(function(){
-  const storageKey='aloSolarCalculatorDraftV2';
-  const ids=['easyDayAmps','easyNightAmps','easyPhase','easyTransport',
-    'calcKwh','calcType','calcSystemType','calcBatteryQty',
-    'calcCable','calcAcCable','calcTransport','monthlyElectricityBill'];
-  const productIds=['calcPanel','calcInverter','calcBattery'];
-  let restoring=false;
-  let explicitReset=false;
-  let userEdited=false;
-  let initialRestoreDone=false;
-  const get=id=>document.getElementById(id);
-  function save(){
-    if(restoring||explicitReset)return;
-    const fields={};
-    ids.forEach(id=>{if(get(id))fields[id]=get(id).value});
-    productIds.forEach(id=>{const el=get(id),option=el?.selectedOptions?.[0];if(el)fields[id]={
-      id:option?.dataset?.id||'',value:el.value
-    }});
-    fields.quality=document.querySelector('input[name="easyQuality"]:checked')?.value||'high';
-    fields.mode=get('calculator')?.classList.contains('easy-mode')?'easy':'advanced';
-    fields.inverterUnits=get('calcInverter')?.dataset.easyUnits||'';
-    fields.hasResult=!!get('easySummary')&&!get('easySummary').hidden;
-    fields.lastSaved=Date.now();
-    try{localStorage.setItem(storageKey,JSON.stringify(fields))}catch(e){}
-  }
-  function restore(){
-    if(userEdited || initialRestoreDone)return;
-    let data;try{data=JSON.parse(localStorage.getItem(storageKey)||'null')}catch(e){}
-    if(!data)return;
-    restoring=true;
-    try{
-      ids.forEach(id=>{const el=get(id);if(el&&data[id]!==undefined)el.value=data[id]});
-      productIds.forEach(id=>{
-        const el=get(id),saved=data[id];if(!el||!saved)return;
-        const opts=Array.from(el.options);
-        const selected=saved.id?opts.find(o=>o.dataset.id===saved.id):opts.find(o=>o.value===saved.value);
-        if(selected)el.selectedIndex=selected.index;
-      });
-      const quality=document.querySelector('input[name="easyQuality"][value="'+data.quality+'"]');
-      if(quality)quality.checked=true;
-      if(typeof setCalculatorMode==='function')setCalculatorMode(data.mode==='advanced'?'advanced':'easy');
-      const inverter=get('calcInverter');
-      if(inverter){if(data.inverterUnits)inverter.dataset.easyUnits=data.inverterUnits;else delete inverter.dataset.easyUnits}
-      if(data.hasResult&&data.mode==='easy'&&typeof calculateEasySolar==='function')calculateEasySolar();
-      else if(typeof calculateSolar==='function')calculateSolar();
-    }finally{restoring=false;initialRestoreDone=true}
-  }
-  document.addEventListener('DOMContentLoaded',()=>{
-    // Restore after the initial live pricing response when possible; never
-    // overwrite edits made during a pending network request.
-    if(window.ALO_PRICING_LIVE_STATUS && window.ALO_PRICING_LIVE_STATUS!=='loading')restore();
-    else window.addEventListener('alo-pricing-updated',restore,{once:true});
-    // If the pricing endpoint is unavailable, restore using local prices.
-    setTimeout(restore,1600);
-    get('calculator')?.addEventListener('input',()=>{userEdited=true;explicitReset=false;save()});
-    get('calculator')?.addEventListener('change',()=>{userEdited=true;explicitReset=false;save()});
-    // Capture the final calculator result after the button's own handler runs.
-    // This listener is on the parent so it executes after the target handler.
-    get('calculator')?.addEventListener('click',e=>{
-      if(e.target.closest('#easyResetBtn,#calcResetBtn')){
-        // Let the explicit reset finish, then discard the draft. Do not allow
-        // pagehide to persist a reset snapshot over the user's previous quote.
-        explicitReset=true;
-        try{localStorage.removeItem(storageKey)}catch(err){}
-        return;
-      }
-      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn')){userEdited=true;save()}
-    });
-    // Never restore a stale session snapshot in response to a late pricing API
-    // response: the customer may already be typing a newer quote. prices.js
-    // preserves selections by product ID while updating prices.
-    // Restore happens only once on initial page load.
-    window.addEventListener('pagehide',save);
-    // Save early before browser/PWA navigation. Keeping an up-to-date snapshot
-    // also protects against unexpected reloads without depending on pagehide.
-    window.addEventListener('beforeunload',save);
-  });
-})();
-</script>
+
 </body>
 </html>
