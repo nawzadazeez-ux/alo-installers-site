@@ -1281,13 +1281,15 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
 /* Preserve the customer's in-progress calculator draft across accidental
    page reloads and asynchronous option refreshes. Explicit Reset clears it. */
 (function(){
-  const storageKey='aloSolarCalculatorDraftV1';
+  const storageKey='aloSolarCalculatorDraftV2';
   const ids=['easyDayAmps','easyNightAmps','easyPhase','easyTransport',
     'calcKwh','calcType','calcSystemType','calcBatteryQty',
     'calcCable','calcAcCable','calcTransport','monthlyElectricityBill'];
   const productIds=['calcPanel','calcInverter','calcBattery'];
   let restoring=false;
   let explicitReset=false;
+  let userEdited=false;
+  let initialRestoreDone=false;
   const get=id=>document.getElementById(id);
   function save(){
     if(restoring||explicitReset)return;
@@ -1300,10 +1302,12 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
     fields.mode=get('calculator')?.classList.contains('easy-mode')?'easy':'advanced';
     fields.inverterUnits=get('calcInverter')?.dataset.easyUnits||'';
     fields.hasResult=!!get('easySummary')&&!get('easySummary').hidden;
-    try{sessionStorage.setItem(storageKey,JSON.stringify(fields))}catch(e){}
+    fields.lastSaved=Date.now();
+    try{localStorage.setItem(storageKey,JSON.stringify(fields))}catch(e){}
   }
   function restore(){
-    let data;try{data=JSON.parse(sessionStorage.getItem(storageKey)||'null')}catch(e){}
+    if(userEdited || initialRestoreDone)return;
+    let data;try{data=JSON.parse(localStorage.getItem(storageKey)||'null')}catch(e){}
     if(!data)return;
     restoring=true;
     try{
@@ -1321,13 +1325,17 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
       if(inverter){if(data.inverterUnits)inverter.dataset.easyUnits=data.inverterUnits;else delete inverter.dataset.easyUnits}
       if(data.hasResult&&data.mode==='easy'&&typeof calculateEasySolar==='function')calculateEasySolar();
       else if(typeof calculateSolar==='function')calculateSolar();
-    }finally{restoring=false}
+    }finally{restoring=false;initialRestoreDone=true}
   }
   document.addEventListener('DOMContentLoaded',()=>{
-    // Restore after initial async pricing response when available as well.
-    restore();
-    get('calculator')?.addEventListener('input',()=>{explicitReset=false;save()});
-    get('calculator')?.addEventListener('change',()=>{explicitReset=false;save()});
+    // Restore after the initial live pricing response when possible; never
+    // overwrite edits made during a pending network request.
+    if(window.ALO_PRICING_LIVE_STATUS && window.ALO_PRICING_LIVE_STATUS!=='loading')restore();
+    else window.addEventListener('alo-pricing-updated',restore,{once:true});
+    // If the pricing endpoint is unavailable, restore using local prices.
+    setTimeout(restore,1600);
+    get('calculator')?.addEventListener('input',()=>{userEdited=true;explicitReset=false;save()});
+    get('calculator')?.addEventListener('change',()=>{userEdited=true;explicitReset=false;save()});
     // Capture the final calculator result after the button's own handler runs.
     // This listener is on the parent so it executes after the target handler.
     get('calculator')?.addEventListener('click',e=>{
@@ -1335,10 +1343,10 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
         // Let the explicit reset finish, then discard the draft. Do not allow
         // pagehide to persist a reset snapshot over the user's previous quote.
         explicitReset=true;
-        try{sessionStorage.removeItem(storageKey)}catch(err){}
+        try{localStorage.removeItem(storageKey)}catch(err){}
         return;
       }
-      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn'))save();
+      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn')){userEdited=true;save()}
     });
     // Never restore a stale session snapshot in response to a late pricing API
     // response: the customer may already be typing a newer quote. prices.js
