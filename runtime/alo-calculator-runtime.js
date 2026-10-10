@@ -16,7 +16,21 @@ function setCalculatorMode(mode){
 
 function selectCalcOption(id,matcher){
   const select=document.getElementById(id);if(!select)return null;
-  const option=Array.from(select.options).find(o=>matcher(o));
+  let option=Array.from(select.options).find(o=>matcher(o));
+  if(!option && arguments.length>2){
+    const item=arguments[2];
+    if(item?.id && Number(item.price)>0){
+      option=document.createElement('option');
+      option.value=String(item.price);
+      option.dataset.id=String(item.id);
+      option.dataset.warranty=item.warranty||'No Warranty';
+      if(item.watts)option.dataset.watts=String(item.watts);
+      if(item.kw)option.dataset.kw=String(item.kw);
+      if(item.phase)option.dataset.phase=item.phase;
+      option.textContent=item.name+' — $'+item.price;
+      select.appendChild(option);
+    }
+  }
   // Use the exact option index because some inverter models share the same price/value
   // (for example Deye 12kW single-phase and 3-phase are both $1,700).
   if(option){select.selectedIndex=option.index;option.selected=true;return option}return null;
@@ -36,7 +50,7 @@ function calculateEasySolar(){
   // Customer sizing rule: every solar panel is counted as 2 amps of daytime load.
   const panels=Math.max(1,Math.ceil(day/2));
   if(!panelItem)throw new Error('No solar panel for this quality');
-  const selectedPanel=selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id);
+  const selectedPanel=selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id,panelItem);
   if(!selectedPanel)throw new Error('Panel model is absent from price list');
   document.getElementById('calcKwh').value=panels;
   document.getElementById('calcType').value='hybrid';
@@ -58,7 +72,8 @@ function calculateEasySolar(){
   if(inverterSelect){delete inverterSelect.dataset.manualSelected;delete inverterSelect.dataset.easyUnits}
   // Refresh phase filtering before selecting the recommended inverter.
   calculateSolar();
-  const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId);
+  const selectedInvItem=(phase==='3ph'?pricing.common.threePhaseInverters:tier.inverters).find(o=>o.id===inverterId);
+  const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId,selectedInvItem);
   if(!chosenInverter)throw new Error('Inverter model is absent from price list');
   if(inverterSelect){inverterSelect.dataset.easyUnits=String(inverterUnits);inverterSelect.dataset.manualSelected='1'}
 
@@ -72,7 +87,7 @@ function calculateEasySolar(){
   const batteries=night>0
     ? (batteryItem.id===smallBattery.id ? Math.ceil(night/3) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
     : 0;
-  if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id)}else{document.getElementById('calcBattery').value='0'}
+  if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id,batteryItem)}else{document.getElementById('calcBattery').value='0'}
   const qty=document.getElementById('calcBatteryQty');
   if(qty){while(qty.options.length<=batteries){const o=document.createElement('option');o.value=String(qty.options.length);o.textContent=o.value;qty.appendChild(o)}qty.value=String(batteries)}
   // First pass prepares the correct single/three-phase protection options.
