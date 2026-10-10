@@ -872,8 +872,8 @@ if(menuToggle&&mainNav){
 <script src="prices.js?v=20261010-nonreset-v2"></script>
 <script>
 window.addEventListener('alo-pricing-updated',()=>{
-  // Pricing changes must never reinitialize the customer's form or language.
-  if(!document.getElementById('calculator')?.classList.contains('easy-mode')) calculateSolar();
+  applyLanguage(localStorage.getItem('aloLanguage')||'en');
+  calculateSolar();
 });
 function setCalculatorMode(mode){
   const section=document.getElementById('calculator');
@@ -886,21 +886,13 @@ function setCalculatorMode(mode){
   if(!isEasy){const inv=document.getElementById('calcInverter');if(inv)delete inv.dataset.easyUnits}
 }
 
-function selectCalcOption(id,matcher,item){
+function selectCalcOption(id,matcher){
   const select=document.getElementById(id);if(!select)return null;
-  let option=Array.from(select.options).find(o=>matcher(o));
-  // Live admin configuration may contain a quality-tier product that is absent
-  // from the flattened dropdown list. Never turn a valid recommendation into $0.
-  if(!option && item && item.id && Number(item.price)>0){
-    option=document.createElement('option');
-    option.value=String(item.price);
-    option.dataset.id=String(item.id);
-    option.dataset.warranty=item.warranty||'No Warranty';
-    if(item.watts)option.dataset.watts=String(item.watts);
-    if(item.kw)option.dataset.kw=String(item.kw);
-    if(item.phase)option.dataset.phase=String(item.phase);
-    if(item.maxPanels)option.dataset.maxPanels=String(item.maxPanels);
-    option.textContent=item.name+' — 
+  const option=Array.from(select.options).find(o=>matcher(o));
+  // Use the exact option index because some inverter models share the same price/value
+  // (for example Deye 12kW single-phase and 3-phase are both $1,700).
+  if(option){select.selectedIndex=option.index;option.selected=true;return option}return null;
+}
 
 function calculateEasySolar(){
   const pricing=window.ALO_PRICING;
@@ -914,8 +906,8 @@ function calculateEasySolar(){
   const tier=pricing.qualityTiers?.[quality]||pricing.qualityTiers?.high;
   const panelItem=tier?.panels?.[0];
   // Customer sizing rule: every solar panel is counted as 2 amps of daytime load.
-  const panels=day>0?Math.ceil(day/2):0;
-  const chosenPanel=selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id,panelItem);
+  const panels=Math.max(1,Math.ceil(day/2));
+  selectCalcOption('calcPanel',o=>o.dataset.id===panelItem?.id);
   document.getElementById('calcKwh').value=panels;
   document.getElementById('calcType').value='hybrid';
 
@@ -923,45 +915,35 @@ function calculateEasySolar(){
   const phase=document.getElementById('easyPhase')?.value==='3ph'?'3ph':'single';
   if(phase==='3ph'){
     // Deye is the available 3-phase range in the supplied equipment list.
-    const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
+    const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
-    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }else{
-    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id})).sort((a,b)=>a.cap-b.cap);
+    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
-    if(!choice){if(summary){summary.hidden=false;summary.textContent='No compatible inverter configured.'}return;}
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }
   document.getElementById('calcSystemType').value=phase;
   const inverterSelect=document.getElementById('calcInverter');
   if(inverterSelect){delete inverterSelect.dataset.manualSelected;delete inverterSelect.dataset.easyUnits}
-  // Select the recommended inverter directly. Recalculation happens after
-  // all Easy Mode fields have been updated to avoid transient invalid states.
-  const selectedInverterItem=phase==='3ph'
-    ? pricing.common.threePhaseInverters.find(x=>x.id===inverterId)
-    : tier.inverters.find(x=>x.id===inverterId);
-  const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId,selectedInverterItem);
+  // Refresh phase filtering before selecting the recommended inverter.
+  calculateSolar();
+  const chosenInverter=selectCalcOption('calcInverter',o=>o.dataset.id===inverterId);
   if(inverterSelect){inverterSelect.dataset.easyUnits=String(inverterUnits);inverterSelect.dataset.manualSelected='1'}
 
   const smallBattery=pricing.common.batteries[0];
   const tierBattery=tier.batteries[0];
   const batteryItem=night<=6?smallBattery:tierBattery;
-  if(!batteryItem){if(summary){summary.hidden=false;summary.textContent='Battery configuration missing.'}return;}
   const batteryRate=batteryItem.ampsPerHour||60;
   // This 100Ah rule applies to all quality levels: 1–3A = one battery,
   // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
   const batteries=night>0
-    ? (batteryItem.id===smallBattery.id ? (night<=3?1:2) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
+    ? (batteryItem.id===smallBattery.id ? Math.ceil(night/3) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
     : 0;
-  if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id,batteryItem)}else{document.getElementById('calcBattery').value='0'}
+  if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id)}else{document.getElementById('calcBattery').value='0'}
   const qty=document.getElementById('calcBatteryQty');
   if(qty){while(qty.options.length<=batteries){const o=document.createElement('option');o.value=String(qty.options.length);o.textContent=o.value;qty.appendChild(o)}qty.value=String(batteries)}
-  if((panels>0&&!chosenPanel)||(panels>0&&!chosenInverter)||(batteries>0&&Number(document.getElementById('calcBattery')?.value||0)<=0)){
-    if(summary){summary.hidden=false;summary.textContent=lang==='ku'?'هەڵە لە لیستی نرخی بەرهەمەکان هەیە؛ تکایە نرخەکان بپشکنە.':lang==='ar'?'يوجد خطأ في أسعار المعدات؛ يرجى مراجعة قائمة الأسعار.':'Equipment price data is incomplete. Please check the product prices.';}
-    return;
-  }
-  // Prepare protection options only after the complete equipment selection exists.
+  // First pass prepares the correct single/three-phase protection options.
   calculateSolar();
   const dcProtectionCost=String(pricing.services.dcProtection[phase]);
   const acProtectionCost=String(pricing.services.acProtection[phase]);
@@ -978,7 +960,7 @@ function calculateEasySolar(){
     const labels=lang==='ku'?['فەیز','پانێڵ','ئینڤێرتەر','پاتری','پاراستنی DC و AC','گواستنەوە','کۆی نرخ']:lang==='ar'?['الطور','الألواح','العاكس','البطارية','حماية DC وAC','النقل','السعر الإجمالي']:['Phase','Panels','Inverter','Battery','DC & AC protection','Transport','Total'];
     const transportText=document.querySelector('#easyTransport option:checked')?.textContent||'';
     const phaseText=document.querySelector('#easyPhase option:checked')?.textContent||'';
-    summary.hidden=false;summary.innerHTML=`<strong>${labels[0]}:</strong> ${phaseText}<br><strong>${labels[1]}:</strong> ${panels} × ${panelText}<br><strong>${labels[2]}:</strong> ${inverterUnits} × ${invText}<br><strong>${labels[3]}:</strong> ${batteries} × ${batteryText}<br><strong>${labels[4]}:</strong> ${(Number(dcProtectionCost)+Number(acProtectionCost))*inverterUnits}<br><strong>${labels[5]}:</strong> ${transportText}<br><strong>${labels[6]}:</strong> ${document.getElementById('calcTotal')?.textContent||'$0'}`;
+    summary.hidden=false;summary.innerHTML=`<strong>${labels[0]}:</strong> ${phaseText}<br><strong>${labels[1]}:</strong> ${panels} × ${panelText}<br><strong>${labels[2]}:</strong> ${inverterUnits} × ${invText}<br><strong>${labels[3]}:</strong> ${batteries} × ${batteryText}<br><strong>${labels[4]}:</strong> $${Number(dcProtectionCost)+Number(acProtectionCost)}<br><strong>${labels[5]}:</strong> ${transportText}<br><strong>${labels[6]}:</strong> ${document.getElementById('calcTotal')?.textContent||'$0'}`;
   }
 }
 
@@ -1038,7 +1020,10 @@ function calculateSolar() {
   const batteryUnitPrice = parseFloat(battery?.value || 0);
   const batteryQtyField = get('calcBatteryQty');
   let batteryQty = Math.max(0, parseInt(batteryQtyField?.value || 0) || 0);
-  // Preserve intentionally selected zero batteries (e.g. day-only usage).
+  if (batteryUnitPrice > 0 && batteryQty === 0) {
+    batteryQty = 1;
+    if (batteryQtyField) batteryQtyField.value = '1';
+  }
   if (batteryUnitPrice === 0) {
     batteryQty = 0;
     if (batteryQtyField) batteryQtyField.value = '0';
@@ -1059,11 +1044,11 @@ function calculateSolar() {
   const acProtection = get('calcAcProtection');
   [[dcProtection,pricing.services.dcProtection[phase]],[acProtection,pricing.services.acProtection[phase]]].forEach(([select,value])=>{
     const label=phase==='3ph'?`${c.three} — $${value}`:`${c.single} — $${value}`;
-    if(select&&(select.dataset.phase!==phase||select.dataset.price!==String(value))){const wasEnabled=Number(select.value)>0;select.innerHTML=`<option value="0">Not selected — $0</option><option value="${value}">${label}</option>`;select.value=wasEnabled?String(value):'0';select.dataset.phase=phase;select.dataset.price=String(value);}
+    if(select&&(select.dataset.phase!==phase||select.dataset.price!==String(value))){select.innerHTML=`<option value="0">Not selected — $0</option><option value="${value}">${label}</option>`;select.dataset.phase=phase;select.dataset.price=String(value);}
   });
 
-  const dcCost = parseFloat(dcProtection?.value||0) * inverterUnits;
-  const acCost = parseFloat(acProtection?.value||0) * inverterUnits;
+  const dcCost = parseFloat(dcProtection?.value||0);
+  const acCost = parseFloat(acProtection?.value||0);
   const cableMeters = parseFloat(get('calcCable')?.value || 0);
   const acCableMeters = parseFloat(get('calcAcCable')?.value || 0);
   const cableCost = cableMeters * pricing.services.solarCablePerMeter;
@@ -1292,88 +1277,7 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
 
 <!-- Pricing is loaded once by prices.js. No duplicate forced refresh. -->
 
-<script>
-/* Preserve the customer's in-progress calculator draft across accidental
-   page reloads and asynchronous option refreshes. Explicit Reset clears it. */
-(function(){
-  const storageKey='aloSolarCalculatorDraftV2';
-  const ids=['easyDayAmps','easyNightAmps','easyPhase','easyTransport',
-    'calcKwh','calcType','calcSystemType','calcBatteryQty',
-    'calcCable','calcAcCable','calcTransport','monthlyElectricityBill'];
-  const productIds=['calcPanel','calcInverter','calcBattery'];
-  let restoring=false;
-  let explicitReset=false;
-  let userEdited=false;
-  let initialRestoreDone=false;
-  const get=id=>document.getElementById(id);
-  function save(){
-    if(restoring||explicitReset)return;
-    const fields={};
-    ids.forEach(id=>{if(get(id))fields[id]=get(id).value});
-    productIds.forEach(id=>{const el=get(id),option=el?.selectedOptions?.[0];if(el)fields[id]={
-      id:option?.dataset?.id||'',value:el.value
-    }});
-    fields.quality=document.querySelector('input[name="easyQuality"]:checked')?.value||'high';
-    fields.mode=get('calculator')?.classList.contains('easy-mode')?'easy':'advanced';
-    fields.inverterUnits=get('calcInverter')?.dataset.easyUnits||'';
-    fields.hasResult=!!get('easySummary')&&!get('easySummary').hidden;
-    fields.lastSaved=Date.now();
-    try{localStorage.setItem(storageKey,JSON.stringify(fields))}catch(e){}
-  }
-  function restore(){
-    if(userEdited || initialRestoreDone)return;
-    let data;try{data=JSON.parse(localStorage.getItem(storageKey)||'null')}catch(e){}
-    if(!data)return;
-    restoring=true;
-    try{
-      ids.forEach(id=>{const el=get(id);if(el&&data[id]!==undefined)el.value=data[id]});
-      productIds.forEach(id=>{
-        const el=get(id),saved=data[id];if(!el||!saved)return;
-        const opts=Array.from(el.options);
-        const selected=saved.id?opts.find(o=>o.dataset.id===saved.id):opts.find(o=>o.value===saved.value);
-        if(selected)el.selectedIndex=selected.index;
-      });
-      const quality=document.querySelector('input[name="easyQuality"][value="'+data.quality+'"]');
-      if(quality)quality.checked=true;
-      if(typeof setCalculatorMode==='function')setCalculatorMode(data.mode==='advanced'?'advanced':'easy');
-      const inverter=get('calcInverter');
-      if(inverter){if(data.inverterUnits)inverter.dataset.easyUnits=data.inverterUnits;else delete inverter.dataset.easyUnits}
-      if(data.hasResult&&data.mode==='easy'&&typeof calculateEasySolar==='function')calculateEasySolar();
-      else if(typeof calculateSolar==='function')calculateSolar();
-    }finally{restoring=false;initialRestoreDone=true}
-  }
-  document.addEventListener('DOMContentLoaded',()=>{
-    // Restore after the initial live pricing response when possible; never
-    // overwrite edits made during a pending network request.
-    if(window.ALO_PRICING_LIVE_STATUS && window.ALO_PRICING_LIVE_STATUS!=='loading')restore();
-    else window.addEventListener('alo-pricing-updated',restore,{once:true});
-    // If the pricing endpoint is unavailable, restore using local prices.
-    setTimeout(restore,1600);
-    get('calculator')?.addEventListener('input',()=>{userEdited=true;explicitReset=false;save()});
-    get('calculator')?.addEventListener('change',()=>{userEdited=true;explicitReset=false;save()});
-    // Capture the final calculator result after the button's own handler runs.
-    // This listener is on the parent so it executes after the target handler.
-    get('calculator')?.addEventListener('click',e=>{
-      if(e.target.closest('#easyResetBtn,#calcResetBtn')){
-        // Let the explicit reset finish, then discard the draft. Do not allow
-        // pagehide to persist a reset snapshot over the user's previous quote.
-        explicitReset=true;
-        try{localStorage.removeItem(storageKey)}catch(err){}
-        return;
-      }
-      if(e.target.closest('#easyCalculateBtn,#calcCalculateBtn,#easyModeBtn,#advancedModeBtn')){userEdited=true;save()}
-    });
-    // Never restore a stale session snapshot in response to a late pricing API
-    // response: the customer may already be typing a newer quote. prices.js
-    // preserves selections by product ID while updating prices.
-    // Restore happens only once on initial page load.
-    window.addEventListener('pagehide',save);
-    // Save early before browser/PWA navigation. Keeping an up-to-date snapshot
-    // also protects against unexpected reloads without depending on pagehide.
-    window.addEventListener('beforeunload',save);
-  });
-})();
-</script>
+
 </body>
 </html>
 +Number(item.price).toFixed(2);
