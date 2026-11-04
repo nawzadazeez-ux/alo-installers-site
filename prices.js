@@ -160,7 +160,8 @@ function applyCalculatorConfig(config) {
   const raw = Array.isArray(config?.items) ? config.items : [];
   const items = raw.filter(item => item && item.active !== false);
   const fallback = window.ALO_PRICING;
-  if (!items.length) {
+  const adminLive = config?.source === 'admin-live';
+  if (!items.length && !adminLive) {
     renderPriceList();
     return;
   }
@@ -187,9 +188,9 @@ function applyCalculatorConfig(config) {
     const inverters = mapped.filter(x => x.category === 'inverter' && x.quality === quality && x.phase !== '3ph');
     return {
       label: oldTier.label || quality,
-      panels: panels.length ? panels : oldTier.panels,
-      batteries: batteries.length ? batteries : oldTier.batteries,
-      inverters: inverters.length ? inverters : oldTier.inverters,
+      panels: panels.length ? panels : (adminLive ? [] : oldTier.panels),
+      batteries: batteries.length ? batteries : (adminLive ? [] : oldTier.batteries),
+      inverters: inverters.length ? inverters : (adminLive ? [] : oldTier.inverters),
     };
   };
 
@@ -209,12 +210,12 @@ function applyCalculatorConfig(config) {
       standard: tierFor('standard'),
     },
     common: {
-      batteries: commonBatteries.length ? commonBatteries : fallback.common.batteries,
-      threePhaseInverters: threePhase.length ? threePhase : fallback.common.threePhaseInverters,
+      batteries: commonBatteries.length ? commonBatteries : (adminLive ? [] : fallback.common.batteries),
+      threePhaseInverters: threePhase.length ? threePhase : (adminLive ? [] : fallback.common.threePhaseInverters),
     },
-    panels: allPanels.length ? allPanels : fallback.panels,
-    batteries: allBatteries.length ? allBatteries : fallback.batteries,
-    inverters: allInverters.length ? allInverters : fallback.inverters,
+    panels: allPanels.length ? allPanels : (adminLive ? [] : fallback.panels),
+    batteries: allBatteries.length ? allBatteries : (adminLive ? [] : fallback.batteries),
+    inverters: allInverters.length ? allInverters : (adminLive ? [] : fallback.inverters),
     services: {
       structurePerPanel: numberOr(s.structurePerPanel, fallback.services.structurePerPanel),
       installationPerPanel: numberOr(s.installationPerPanel, fallback.services.installationPerPanel),
