@@ -26,16 +26,41 @@ const defaultConfig = {
 async function ensure(db){
   await db.prepare(`CREATE TABLE IF NOT EXISTS app_calculator_config (id INTEGER PRIMARY KEY CHECK(id=1), config_json TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
 }
+// The website admin writes to calculator_items / calculator_settings.
+// Read those tables first so the public Easy and Advanced calculators use the
+// same saved values as /api/portal/admin/calculator (no manual publishing).
 export async function onRequestGet({env}){
   const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*'};
-  if(!env.DB) return new Response(JSON.stringify({...defaultConfig,source:'default-no-db'}),{headers});
+  const respond=(data)=>new Response(JSON.stringify(data),{headers});
+  if(!env.DB) return respond({...defaultConfig,source:'default-no-db'});
   try{
+    // On fresh installations the website-admin tables may not exist yet.
+    // Preserve legacy/mobile config only in that case.
+    const table=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='calculator_items'").first();
+    if(table){
+      const {results:items}=await env.DB.prepare('SELECT * FROM calculator_items ORDER BY sort_order,id').all();
+      const settingsTable=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='calculator_settings'").first();
+      const rows=settingsTable?(await env.DB.prepare('SELECT key,value FROM calculator_settings').all()).results:[];
+      const settings={...defaultConfig.settings,...Object.fromEntries(rows.map(x=>[x.key,Number(x.value)]))};
+      // SQLite stores booleans as 0/1. Normalize them for prices.js's strict checks.
+      return respond({
+        items:items.map(x=>({
+          code:x.code,category:x.category,quality:x.quality,mode:x.mode,
+          name:x.name,price:Number(x.price),warranty:x.warranty,
+          watts:Number(x.watts||0),kw:Number(x.kw||0),phase:x.phase,
+          max_panels:Number(x.max_panels||0),amps_per_hour:Number(x.amps_per_hour||0),
+          active:Number(x.active)===1,sort_order:Number(x.sort_order||0)
+        })),
+        settings,source:'admin-live'
+      });
+    }
     await ensure(env.DB);
     const row=await env.DB.prepare('SELECT config_json, updated_at FROM app_calculator_config WHERE id=1').first();
-    if(!row) return new Response(JSON.stringify({...defaultConfig,source:'default'}),{headers});
+    if(!row) return respond({...defaultConfig,source:'default'});
     const data=JSON.parse(row.config_json);
-    return new Response(JSON.stringify({...data,updated_at:row.updated_at,source:'live'}),{headers});
+    return respond({...data,updated_at:row.updated_at,source:'live'});
   }catch(e){
-    return new Response(JSON.stringify({...defaultConfig,source:'fallback'}),{headers});
+    console.error('Calculator config fetch failed:',e);
+    return respond({...defaultConfig,source:'fallback'});
   }
 }
