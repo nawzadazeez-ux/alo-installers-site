@@ -1,3 +1,4 @@
+import { calculatorConfig } from '../../../../portal-api.js';
 const defaultConfig = {
   items: [
     {code:'longi-x10-650',category:'panel',quality:'high',mode:'both',name:'LONGi Hi-MO X10 650W',price:108,warranty:'15 Years Warranty',watts:650,kw:0,phase:'single',max_panels:0,amps_per_hour:0},
@@ -26,8 +27,17 @@ const defaultConfig = {
 async function ensure(db){
   await db.prepare(`CREATE TABLE IF NOT EXISTS app_calculator_config (id INTEGER PRIMARY KEY CHECK(id=1), config_json TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
 }
-export async function onRequestGet({env}){
+export async function onRequestGet({env,request}){
   const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*'};
+  if(new URL(request.url).searchParams.get('website')==='1'){
+    try{
+      if(!env.DB) throw new Error('DB unavailable');
+      return new Response(JSON.stringify({...await calculatorConfig(env),source:'web-admin'}),{headers});
+    }catch(e){
+      console.error('Website calculator configuration failed',e);
+      return new Response(JSON.stringify({error:'Website calculator configuration unavailable'}),{status:503,headers});
+    }
+  }
   if(!env.DB) return new Response(JSON.stringify({...defaultConfig,source:'default-no-db'}),{headers});
   try{
     await ensure(env.DB);
