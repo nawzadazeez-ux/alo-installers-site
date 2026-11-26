@@ -8,8 +8,34 @@ function painter(canvas,rtl){const g=canvas.getContext('2d');const rect=(x,y,w,h
 function drawContained(g,img,x,y,w,h){const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;const scale=Math.min(w/iw,h/ih);const dw=iw*scale,dh=ih*scale;g.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh)}
 function header(p,title,ref,rtl,logo){p.rect(0,0,W,220,green);drawContained(p.g,logo,80,32,65,65);p.text('ALO SOLAR ENERGY',165,45,27,gold,true,620,'left');p.text(ref,1160,48,20,'#d9e5dd',false,400,'right');p.text(title,rtl?1160:80,120,49,'#fff',true)}
 function footer(p,n,ref){p.line(80,1658,1080);p.text('alosolarenergy.com | Erbil, Iraq',80,1678,20,muted,false,700,'left');p.text(ref+' / '+String(n).padStart(2,'0'),1160,1678,20,muted,false,400,'right')}
-function cover(s,d,t,l,rtl,logo,hero){let c=page(),p=painter(c,rtl),x=rtl?1160:80;p.rect(0,0,W,H,green);p.rect(rtl?1070:80,75,90,9,gold);drawContained(p.g,logo,rtl?1060:80,105,100,100);p.text('ALO SOLAR ENERGY',rtl?1040:200,122,43,'#fff',true,920);p.text('Your Power • Your Future.',rtl?1040:200,180,25,gold,false);p.text(l.cover,x,270,68,'#fff',true);p.text(l.subtitle,x,360,76,gold,true);p.text(s.system,x,470,32,'#c8dcd1');drawContained(p.g,logo,90,530,1060,495);
-const batt=s.rows.find(r=>r[3]==='battery');const metrics=[[l.pv,s.pv.toFixed(2)+' kWp'],[l.inv,s.kw+' kW'],[l.bat,batt?batt[1]+' × '+batt[0]:String(s.batteryQty||0)+' units']];metrics.forEach(([k,v],i)=>{let bx=80+(rtl?2-i:i)*365;p.rect(bx,1045,350,140,'#123d30');p.text(k,bx+175,1065,23,'#bcd4c7',true,320,'center');p.text(v,bx+175,1110,32,gold,true,320,'center')});p.text(l.prepared,x,1240,24,gold,true);p.text(d.name,x,1290,42,'#fff',true);p.text(d.address||'',x,1350,27,'#c8dcd1');p.text(t.number+': '+s.ref,x,1410,25,'#c8dcd1');p.text(t.date+': '+s.date,x,1455,25,'#c8dcd1');p.g.save();p.text('0776 440 0440  |  0750 476 0468',x,1590,27,'#fff',false,1090,rtl?'right':'left','ltr');p.g.restore();p.text('alosolarenergy.com',x,1640,26,gold);return c}
+function cover(s,d,t,l,rtl,logo,hero){
+ const c=page(),p=painter(c,rtl),g=p.g,x=rtl?1110:130,align=rtl?'right':'left';
+ const bg=g.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#061911');bg.addColorStop(.55,'#102f23');bg.addColorStop(1,'#061911');p.rect(0,0,W,H,bg);
+ p.rect(0,0,W,12,gold);p.rect(74,72,1092,1610,'#ffffff06');
+ g.strokeStyle='#c9ab6340';g.lineWidth=2;g.strokeRect(74,72,1092,1610);
+ p.text('ALO SOLAR ENERGY',620,112,43,'#fff',true,1000,'center','ltr');
+ p.text('Your Power • Your Future.',620,176,26,gold,false,1000,'center','ltr');
+ p.line(130,239,980,'#c9ab6355');
+ p.text(l.cover,620,275,64,'#fff',true,980,'center');
+ p.text(l.subtitle,620,365,70,gold,true,980,'center');
+ p.text(s.system,620,463,28,'#c8dcd1',false,980,'center','ltr');
+ // Original logo asset, centered and fully visible. No cropping or stretching.
+ drawContained(g,logo,155,515,930,475);
+ p.line(130,1005,980,'#c9ab6355');
+ const batt=s.rows.find(r=>r[3]==='battery');
+ const metrics=[[l.pv,s.pv.toFixed(2)+' kWp'],[l.inv,s.kw+' kW'],[l.bat,batt?batt[1]+' × '+batt[0]:String(s.batteryQty||0)+' units']];
+ metrics.forEach(([k,v],i)=>{const bx=130+(rtl?2-i:i)*330;p.rect(bx,1034,320,140,'#173e30');p.rect(bx,1034,320,4,gold);p.text(k,bx+160,1055,23,'#c5dbce',true,288,'center');p.text(v,bx+160,1100,30,gold,true,288,'center','ltr')});
+ p.rect(130,1210,980,316,'#071d16');p.rect(rtl?1105:130,1210,5,316,gold);
+ p.text(l.prepared,x+(rtl?-28:28),1234,24,gold,true,920,align);
+ p.text(d.name,x+(rtl?-28:28),1280,38,'#fff',true,920,align);
+ p.text(d.address||'',x+(rtl?-28:28),1340,27,'#c8dcd1',false,920,align);
+ p.text(t.number+': '+s.ref,x+(rtl?-28:28),1400,24,'#c8dcd1',false,920,align);
+ p.text(t.date+': '+s.date,x+(rtl?-28:28),1450,24,'#c8dcd1',false,920,align);
+ p.line(130,1564,980,'#c9ab6355');
+ p.text('0776 440 0440  |  0750 476 0468',620,1589,27,'#fff',false,980,'center','ltr');
+ p.text('alosolarenergy.com',620,1634,26,gold,false,980,'center','ltr');
+ return c
+}
 function company(s,d,t,l,rtl,logo,lang){
  const copy={
  en:{title:'About ALO Solar Energy',eyebrow:'EXPERIENCE SINCE 2021',intro:'ALO Solar Energy has been working in the solar energy sector since 2021, providing integrated energy solutions for homes, businesses and larger facilities. Our work combines system design, equipment selection, installation and after-sales support.',experience:'Our project experience',project:'We have worked on major solar projects in Erbil, including systems with capacities of 215 kW, 385 kW and 450 kW. This experience informs our approach to designing reliable solutions suited to each customer’s energy needs.',promise:'Our commitment',quality:'We focus on quality equipment, careful engineering, professional installation and dependable customer support, with an emphasis on long-term performance and efficient energy use.'},
