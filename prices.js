@@ -104,8 +104,9 @@ window.ALO_PRICING = {
 function renderPriceList() {
   const p = window.ALO_PRICING;
   const money = value => Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const option = (item, extra = '') =>
-    `<option value="${item.price}" data-id="${item.id}" data-quality="${item.quality || 'common'}" data-warranty="${item.warranty}" ${extra}>${item.name} — ${p.currency}${money(item.price)}</option>`;
+    `<option value="${item.price}" data-id="${escape(item.id)}" data-quality="${item.quality || 'common'}" data-warranty="${escape(item.warranty)}" ${extra}>${escape(item.name)} — ${p.currency}${money(item.price)}</option>`;
   const panelSelect = document.getElementById('calcPanel');
   if (panelSelect) {
     panelSelect.innerHTML = `<option value="" data-watts="0" data-warranty="No Warranty">Select panel — $0</option>` +
@@ -158,9 +159,9 @@ function calculatorItem(item) {
 
 function applyCalculatorConfig(config) {
   const raw = Array.isArray(config?.items) ? config.items : [];
-  const items = raw.filter(item => item && item.active !== false);
+  const items = raw.filter(item => item && item.active !== false && item.active !== 0);
   const fallback = window.ALO_PRICING;
-  if (!items.length) {
+  if (!items.length && config?.source !== 'web-admin') {
     renderPriceList();
     return;
   }
@@ -180,24 +181,27 @@ function applyCalculatorConfig(config) {
     return x;
   });
 
+  const authoritative = config?.source === 'web-admin';
+  const easyItems = mapped.filter(x => x.mode !== 'advanced');
+  const advancedItems = mapped.filter(x => x.mode !== 'easy');
   const tierFor = quality => {
     const oldTier = fallback.qualityTiers?.[quality] || { label: quality, panels: [], batteries: [], inverters: [] };
-    const panels = mapped.filter(x => x.category === 'panel' && x.quality === quality);
-    const batteries = mapped.filter(x => x.category === 'battery' && x.quality === quality);
-    const inverters = mapped.filter(x => x.category === 'inverter' && x.quality === quality && x.phase !== '3ph');
+    const panels = easyItems.filter(x => x.category === 'panel' && x.quality === quality);
+    const batteries = easyItems.filter(x => x.category === 'battery' && x.quality === quality);
+    const inverters = easyItems.filter(x => x.category === 'inverter' && x.quality === quality && x.phase !== '3ph');
     return {
       label: oldTier.label || quality,
-      panels: panels.length ? panels : oldTier.panels,
-      batteries: batteries.length ? batteries : oldTier.batteries,
-      inverters: inverters.length ? inverters : oldTier.inverters,
+      panels: authoritative || panels.length ? panels : oldTier.panels,
+      batteries: authoritative || batteries.length ? batteries : oldTier.batteries,
+      inverters: authoritative || inverters.length ? inverters : oldTier.inverters,
     };
   };
 
-  const commonBatteries = mapped.filter(x => x.category === 'battery' && x.quality === 'common');
-  const threePhase = mapped.filter(x => x.category === 'inverter' && x.phase === '3ph');
-  const allPanels = mapped.filter(x => x.category === 'panel');
-  const allBatteries = mapped.filter(x => x.category === 'battery');
-  const allInverters = mapped.filter(x => x.category === 'inverter');
+  const commonBatteries = easyItems.filter(x => x.category === 'battery' && x.quality === 'common');
+  const threePhase = easyItems.filter(x => x.category === 'inverter' && x.phase === '3ph');
+  const allPanels = advancedItems.filter(x => x.category === 'panel');
+  const allBatteries = advancedItems.filter(x => x.category === 'battery');
+  const allInverters = advancedItems.filter(x => x.category === 'inverter');
   const s = config?.settings || {};
   const numberOr = (value, defaultValue) => Number.isFinite(Number(value)) ? Number(value) : defaultValue;
 
@@ -209,12 +213,12 @@ function applyCalculatorConfig(config) {
       standard: tierFor('standard'),
     },
     common: {
-      batteries: commonBatteries.length ? commonBatteries : fallback.common.batteries,
-      threePhaseInverters: threePhase.length ? threePhase : fallback.common.threePhaseInverters,
+      batteries: authoritative || commonBatteries.length ? commonBatteries : fallback.common.batteries,
+      threePhaseInverters: authoritative || threePhase.length ? threePhase : fallback.common.threePhaseInverters,
     },
-    panels: allPanels.length ? allPanels : fallback.panels,
-    batteries: allBatteries.length ? allBatteries : fallback.batteries,
-    inverters: allInverters.length ? allInverters : fallback.inverters,
+    panels: authoritative || allPanels.length ? allPanels : fallback.panels,
+    batteries: authoritative || allBatteries.length ? allBatteries : fallback.batteries,
+    inverters: authoritative || allInverters.length ? allInverters : fallback.inverters,
     services: {
       structurePerPanel: numberOr(s.structurePerPanel, fallback.services.structurePerPanel),
       installationPerPanel: numberOr(s.installationPerPanel, fallback.services.installationPerPanel),
@@ -249,7 +253,7 @@ function applyCalculatorConfig(config) {
 }
 renderPriceList();
 window.ALO_PRICING_LIVE_STATUS = 'loading';
-fetch('/api/portal/calculator/config?refresh=' + Date.now(), { cache: 'no-store', headers: { 'accept': 'application/json' } })
+fetch('/api/portal/calculator/config?website=1&refresh=' + Date.now(), { cache: 'no-store', headers: { 'accept': 'application/json' } })
   .then(response => response.ok ? response.json() : Promise.reject(new Error('Pricing API unavailable')))
   .then(config => { applyCalculatorConfig(config); window.ALO_PRICING_LIVE_STATUS = config.source || 'live'; })
   .catch(error => { window.ALO_PRICING_LIVE_STATUS = 'fallback'; console.warn('Using the built-in price list:', error.message); });
@@ -257,7 +261,7 @@ fetch('/api/portal/calculator/config?refresh=' + Date.now(), { cache: 'no-store'
 
 async function refreshAloLivePricing(){
   try{
-    const response = await fetch('/api/portal/calculator/config?refresh=' + Date.now(), {
+    const response = await fetch('/api/portal/calculator/config?website=1&refresh=' + Date.now(), {
       cache: 'no-store',
       headers: { 'accept': 'application/json' }
     });

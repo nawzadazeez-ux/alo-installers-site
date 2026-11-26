@@ -12,7 +12,7 @@ function setCalculatorMode(mode){
   easy?.classList.toggle('active',isEasy);advanced?.classList.toggle('active',!isEasy);
   easy?.setAttribute('aria-selected',String(isEasy));advanced?.setAttribute('aria-selected',String(!isEasy));
   localStorage.setItem('aloCalculatorMode',isEasy?'easy':'advanced');
-  if(!isEasy){const inv=document.getElementById('calcInverter');if(inv)delete inv.dataset.easyUnits}
+  if(!isEasy){const inv=document.getElementById('calcInverter');if(inv)delete inv.dataset.easyUnits;document.querySelectorAll('option[data-easy-only="1"]').forEach(o=>o.remove())}
 }
 
 function selectCalcOption(id,matcher){
@@ -20,10 +20,12 @@ function selectCalcOption(id,matcher){
   let option=Array.from(select.options).find(o=>matcher(o));
   if(!option && arguments.length>2){
     const item=arguments[2];
-    if(item?.id && Number(item.price)>0){
+    if(item?.id && Number(item.price)>=0){
       option=document.createElement('option');
       option.value=String(item.price);
       option.dataset.id=String(item.id);
+      option.dataset.easyOnly='1';
+      if(item.maxPanels)option.dataset.maxPanels=String(item.maxPanels);
       option.dataset.warranty=item.warranty||'No Warranty';
       if(item.watts)option.dataset.watts=String(item.watts);
       if(item.kw)option.dataset.kw=String(item.kw);
@@ -62,10 +64,12 @@ function calculateEasySolar(){
     // Deye is the available 3-phase range in the supplied equipment list.
     const choices=pricing.common.threePhaseInverters.map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
+    if(!choice || !(choice.cap>0))throw new Error('No suitable active inverter configured');
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }else{
     const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
+    if(!choice || !(choice.cap>0))throw new Error('No suitable active inverter configured');
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }
   document.getElementById('calcSystemType').value=phase;
@@ -85,7 +89,7 @@ function calculateEasySolar(){
   // This 100Ah rule applies to all quality levels: 1–3A = one battery,
   // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
   const batteries=night>0
-    ? (batteryItem.id===smallBattery.id ? Math.ceil(night/3) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
+    ? (batteryItem.id===smallBattery?.id ? Math.ceil(night/3) : Math.max(1,Math.ceil(night*7.5/batteryRate)))
     : 0;
   if(batteries){selectCalcOption('calcBattery',o=>o.dataset.id===batteryItem.id,batteryItem)}else{document.getElementById('calcBattery').value='0'}
   const qty=document.getElementById('calcBatteryQty');
