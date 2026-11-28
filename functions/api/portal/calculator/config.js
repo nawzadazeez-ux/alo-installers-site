@@ -15,8 +15,9 @@ const defaultConfig = {
     {code:'deye-16-single',category:'inverter',quality:'high',mode:'both',name:'Deye 16kW Hybrid Single Phase',price:1850,warranty:'5 Years Warranty',watts:0,kw:16,phase:'single',max_panels:36,amps_per_hour:0},
     {code:'medald-6-single',category:'inverter',quality:'medium',mode:'both',name:'Medald Power 6kW Hybrid',price:400,warranty:'4 Years Warranty',watts:0,kw:6,phase:'single',max_panels:8,amps_per_hour:0},
     {code:'viva-11-medium',category:'inverter',quality:'medium',mode:'both',name:'Viva Hybrid Inverter 11kW',price:775,warranty:'2 Years Warranty',watts:0,kw:11,phase:'single',max_panels:18,amps_per_hour:0},
-    {code:'bryyzee-6-single',category:'inverter',quality:'standard',mode:'both',name:'Bryyzee Hybrid Inverter 6.2kW',price:335,warranty:'2 Years Warranty',watts:0,kw:6.2,phase:'single',max_panels:8,amps_per_hour:0},
-    {code:'viva-11-standard',category:'inverter',quality:'standard',mode:'both',name:'Viva Hybrid Inverter 11kW',price:775,warranty:'2 Years Warranty',watts:0,kw:11,phase:'single',max_panels:18,amps_per_hour:0},
+    {code:'great-energy-6-standard',category:'inverter',quality:'standard',mode:'both',name:'Great Energy Hybrid Inverter 6.2kW',price:250,warranty:'2 Years Warranty',watts:0,kw:6.2,phase:'single',max_panels:8,amps_per_hour:0},
+    {code:'great-energy-8-standard',category:'inverter',quality:'standard',mode:'both',name:'Great Energy Hybrid Inverter 8kW',price:375,warranty:'2 Years Warranty',watts:0,kw:8,phase:'single',max_panels:14,amps_per_hour:0},
+    {code:'great-energy-11-standard',category:'inverter',quality:'standard',mode:'both',name:'Great Energy Hybrid Inverter 11kW',price:500,warranty:'2 Years Warranty',watts:0,kw:11,phase:'single',max_panels:18,amps_per_hour:0},
     {code:'deye-12-3ph',category:'inverter',quality:'common',mode:'both',name:'Deye 12kW Hybrid 3-Phase',price:1700,warranty:'5 Years Warranty',watts:0,kw:12,phase:'3ph',max_panels:28,amps_per_hour:0},
     {code:'deye-16-3ph',category:'inverter',quality:'common',mode:'both',name:'Deye 16kW Hybrid 3-Phase',price:1900,warranty:'5 Years Warranty',watts:0,kw:16,phase:'3ph',max_panels:36,amps_per_hour:0},
     {code:'deye-20-3ph',category:'inverter',quality:'common',mode:'both',name:'Deye 20kW Hybrid 3-Phase',price:2500,warranty:'5 Years Warranty',watts:0,kw:20,phase:'3ph',max_panels:50,amps_per_hour:0}
