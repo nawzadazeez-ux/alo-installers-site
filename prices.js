@@ -52,8 +52,9 @@ const ALO_QUALITY_TIERS = {
       { id: 'mana-314', name: 'Mana 314Ah 51.2V', price: 1485, warranty: '5 Years Warranty', ampsPerHour: 60 },
     ],
     inverters: [
-      { id: 'bryyzee-6-single', name: 'Bryyzee Hybrid Inverter 6.2kW', price: 335, kw: 6.2, phase: 'single', warranty: '2 Years Warranty', maxPanels: 8 },
-      { id: 'viva-11-standard', name: 'Viva Hybrid Inverter 11kW', price: 775, kw: 11, phase: 'single', warranty: '2 Years Warranty', maxPanels: 18 },
+      { id: 'great-energy-6-standard', name: 'Great Energy Hybrid Inverter 6.2kW', price: 250, kw: 6.2, phase: 'single', warranty: '2 Years Warranty', maxPanels: 8 },
+      { id: 'great-energy-8-standard', name: 'Great Energy Hybrid Inverter 8kW', price: 375, kw: 8, phase: 'single', warranty: '2 Years Warranty', maxPanels: 14 },
+      { id: 'great-energy-11-standard', name: 'Great Energy Hybrid Inverter 11kW', price: 500, kw: 11, phase: 'single', warranty: '2 Years Warranty', maxPanels: 18 },
     ],
   },
 };
