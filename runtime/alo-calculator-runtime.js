@@ -43,7 +43,8 @@ function calculateEasySolar(){
   const pricing=window.ALO_PRICING;
   const day=Math.min(500,Math.max(0,parseFloat(document.getElementById('easyDayAmps')?.value)||0));
   const night=Math.min(500,Math.max(0,parseFloat(document.getElementById('easyNightAmps')?.value)||0));
-  const quality=document.querySelector('input[name="easyQuality"]:checked')?.value||'high';
+  const rawQuality=document.querySelector('input[name="easyQuality"]:checked')?.value||'high';
+  const quality=rawQuality==='basic'?'standard':rawQuality;
   const lang=document.documentElement.lang||'en';
   const summary=document.getElementById('easySummary');
   if(day<=0&&night<=0){if(summary){summary.hidden=false;summary.textContent=lang==='ku'?'تکایە ئەمپێری ڕۆژ یان شەو داخڵ بکە.':lang==='ar'?'يرجى إدخال حمل النهار أو الليل.':'Please enter the day or night load.'}return}
@@ -67,7 +68,11 @@ function calculateEasySolar(){
     if(!choice || !(choice.cap>0))throw new Error('No suitable active inverter configured');
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
   }else{
-    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:x.maxPanels,name:x.name,id:x.id}));
+    const choices=tier.inverters.filter(x=>x.phase==='single').map(x=>({cap:Number(x.maxPanels),name:x.name,id:x.id}));
+    // Standard quality must select the smallest adequate inverter regardless of Admin list order.
+    if(quality==='standard'){
+      choices.splice(0,choices.length,...choices.filter(x=>Number.isFinite(x.cap)&&x.cap>0).sort((a,b)=>a.cap-b.cap));
+    }
     const choice=choices.find(x=>panels<=x.cap)||choices[choices.length-1];
     if(!choice || !(choice.cap>0))throw new Error('No suitable active inverter configured');
     inverterName=choice.name;inverterId=choice.id;inverterUnits=panels>choice.cap?Math.ceil(panels/choice.cap):1;
