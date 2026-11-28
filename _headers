@@ -70,3 +70,6 @@
 
 /api/portal/calculator/config
   Cache-Control: no-store, no-cache, must-revalidate
+
+/runtime/alo-calculator-runtime.js
+  Cache-Control: no-store, no-cache, must-revalidate
