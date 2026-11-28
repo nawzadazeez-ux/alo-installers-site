@@ -89,8 +89,8 @@ function calculateEasySolar(){
   const smallBattery=pricing.common.batteries[0];
   const tierBattery=tier.batteries[0];
   const batteryItem=night<=6?smallBattery:tierBattery;
-  if(!batteryItem)throw new Error('Battery is absent from pricing configuration');
-  const batteryRate=batteryItem.ampsPerHour||60;
+  if(night>0&&!batteryItem)throw new Error('Battery is absent from pricing configuration');
+  const batteryRate=batteryItem?.ampsPerHour||60;
   // This 100Ah rule applies to all quality levels: 1–3A = one battery,
   // 4–6A = two batteries. Above 6A switches to that quality level's 314Ah battery.
   const batteries=night>0
