@@ -187,7 +187,12 @@ function applyCalculatorConfig(config) {
   const advancedItems = mapped.filter(x => x.mode !== 'easy');
   const tierFor = quality => {
     const oldTier = fallback.qualityTiers?.[quality] || { label: quality, panels: [], batteries: [], inverters: [] };
-    const panels = easyItems.filter(x => x.category === 'panel' && x.quality === quality);
+    let panels = easyItems.filter(x => x.category === 'panel' && x.quality === quality);
+    // Standard and Medium use the same Power Solid 620W panel. When Admin
+    // keeps only the Medium entry, reuse its live price rather than a stale default.
+    if (quality === 'standard' && !panels.length) {
+      panels = easyItems.filter(x => x.category === 'panel' && x.quality === 'medium' && Number(x.watts) === 620 && /power\s*solid/i.test(x.name || ''));
+    }
     const batteries = easyItems.filter(x => x.category === 'battery' && x.quality === quality);
     const inverters = easyItems.filter(x => x.category === 'inverter' && x.quality === quality && x.phase !== '3ph');
     return {
