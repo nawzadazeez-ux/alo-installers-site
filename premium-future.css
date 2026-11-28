@@ -80,16 +80,24 @@ body[data-layout=home] .hero h1 em{color:#f4b942}
 body[data-layout=home] header{background:#0b1520f5;border-bottom-color:#10b98155}
 body[data-layout=home] .hero{background:radial-gradient(ellipse at 77% 35%,#064e3b99,transparent 55%),linear-gradient(135deg,#0b1520,#123b35 65%,#0b1520)}
 body[data-layout=home] :is(.btn-primary,.cta):focus-visible{outline:2px solid #f4b942;outline-offset:4px}
-@media(prefers-color-scheme:light){
- body[data-layout=home]{--future-bg:#f8fafc;--future-text:#0b1520;--future-muted:#425c58;--future-line:#cbded7;--future-gold:#93620b;background:#f8fafc;color:#0b1520}
- body[data-layout=home] :is(#services,#about,#brands,#faq,.map-section){background:#f8fafc;color:#0b1520}
- body[data-layout=home] :is(#services .card,#about .feature,#brands .partner-brand,.faq-item,.map-card){background:#fff;border-color:#cbded7;box-shadow:0 8px 24px #0b15200d}
- body[data-layout=home] :is(#services .card h3,#about .feature b,.faq-item summary,#brands .section-head h2){color:#0b1520}
- body[data-layout=home] #brands .partner-brand small{color:#425c58}
- body[data-layout=home] #brands .partner-brand .wordmark{fill:#064e3b}
- body[data-layout=home] #brands .partner-brand{color:#064e3b}
- body[data-layout=home] :is(#solutions,.calculator-section){--future-text:#f8fafc;--future-muted:#b9d0ce;--future-gold:#f4b942;--future-line:#28574e;color:#f8fafc}
- body[data-layout=home] .hero{--future-gold:#f4b942}
- body[data-layout=home] :is(.faq-number,.faq-plus,#services .icon){background:#e1f5eb;color:#064e3b;border-color:#cbded7}
- body[data-layout=home] .faq-plus:before,body[data-layout=home] .faq-plus:after{background:#064e3b}
-}
+
+.alo-theme-toggle{flex:0 0 36px;width:36px;height:36px;display:inline-grid;place-items:center;border:1px solid #10b98180;border-radius:50%;background:#132b32;color:#f4b942;font:22px/1 Arial;cursor:pointer;padding:0;margin-inline:5px;position:relative;z-index:60}
+.alo-theme-toggle:focus-visible{outline:2px solid #10b981;outline-offset:3px}
+html[data-alo-theme=light]{color-scheme:light}
+html[data-alo-theme=light] body[data-layout]{--future-bg:#f8fafc;--future-panel:#fff;--future-text:#0b1520;--future-muted:#425c58;--future-line:#cbded7;--future-gold:#93620b;--alo-ink:#0b1520;--alo-ink-soft:#425c58;--alo-gold-light:#93620b;--alo-green:#064e3b;--alo-cream:#f8fafc;--dark:#f8fafc;--dark2:#edf5f1;--card:#fff;--text:#0b1520;--muted:#425c58;--gold:#93620b;--gold2:#93620b;background:#f8fafc;color:#0b1520}
+html[data-alo-theme=light] body[data-layout] header{background:#fffffff5;border-color:#cbded7;box-shadow:0 4px 20px #0b152012}
+html[data-alo-theme=light] body[data-layout] header :is(a,b,span,nav a,.lang-btn,.lang){color:#064e3b}
+html[data-alo-theme=light] body[data-layout] header :is(.product-dropdown,.lang-switcher){background:#fff;border-color:#cbded7}
+html[data-alo-theme=light] .alo-theme-toggle{background:#e1f5eb;color:#064e3b}
+html[data-alo-theme=light] body[data-layout] :is(.hero,#services,#about,#brands,#faq,.faq-section,.map-section,#solutions,.calculator-section){background:#f8fafc;color:#0b1520}
+html[data-alo-theme=light] body[data-layout] .hero{background:radial-gradient(ellipse at 80% 30%,#d1fae5,transparent 65%),#f8fafc}
+html[data-alo-theme=light] body[data-layout] :is(.hero h1,.section-head h2,#about h2,.map-heading h2,.card h3,.feature b,.faq-item summary,h1,h2,h3){color:#0b1520}
+html[data-alo-theme=light] body[data-layout] :is(.hero h1 em,.kicker,.eyebrow,.calc-total,.stat strong){color:#93620b}
+html[data-alo-theme=light] body[data-layout] :is(.hero p,.section-head p,.card p,.feature span,.faq-answer,.map-heading p,.partner-brand small,.calc-field label){color:#425c58}
+html[data-alo-theme=light] body[data-layout] :is(.hero-card,.stat,#services .card,#solutions .card,#about .feature,#brands .partner-brand,.faq-item,.map-card,.calc-card,.calc-result,.notice,#productGrid>article,.login-card,.product,.stats article,.box,.login,.app-card,.application-search,.brand-card,.eve-panel,.ev-quick-nav,.solar){background:#fff;border-color:#cbded7;box-shadow:0 8px 24px #0b15200d;color:#0b1520}
+html[data-alo-theme=light] body[data-layout] :is(.calc-field input,.calc-field select,.easy-quality-box,.easy-note,.easy-summary,.result-recommendation,.result-warranty,.warranty-item,.calc-mode-switch){background:#edf5f1;border-color:#cbded7;color:#0b1520}
+html[data-alo-theme=light] body[data-layout] :is(.btn-outline,.badge){color:#064e3b;border-color:#9cc7b5;background:#ffffffaa}
+html[data-alo-theme=light] body[data-layout] :is(.faq-number,.faq-plus,#services .icon){background:#e1f5eb;color:#064e3b;border-color:#cbded7}
+html[data-alo-theme=light] body[data-layout] #brands .partner-brand .wordmark{fill:#064e3b}
+html[data-alo-theme=light] body[data-layout] footer{background:#0b1520;color:#f8fafc}
+@media(max-width:850px){html[data-alo-theme=light] body[data-layout] header nav{background:#fff}.alo-theme-toggle{width:32px;height:32px;flex-basis:32px;margin-inline:2px}}
