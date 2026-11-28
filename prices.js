@@ -193,7 +193,12 @@ function applyCalculatorConfig(config) {
     if (quality === 'standard' && !panels.length) {
       panels = easyItems.filter(x => x.category === 'panel' && x.quality === 'medium' && Number(x.watts) === 620 && /power\s*solid/i.test(x.name || ''));
     }
-    const batteries = easyItems.filter(x => x.category === 'battery' && x.quality === quality);
+    let batteries = easyItems.filter(x => x.category === 'battery' && x.quality === quality);
+    // If Standard has no dedicated battery, use the existing live Viva 314Ah
+    // battery already used in the customer's quotation, without changing its price.
+    if (quality === 'standard' && !batteries.length) {
+      batteries = easyItems.filter(x => x.category === 'battery' && x.quality === 'medium' && /viva/i.test(x.name || '') && /314\s*ah/i.test(x.name || ''));
+    }
     const inverters = easyItems.filter(x => x.category === 'inverter' && x.quality === quality && x.phase !== '3ph');
     return {
       label: oldTier.label || quality,
