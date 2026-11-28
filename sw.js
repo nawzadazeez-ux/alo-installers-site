@@ -1,4 +1,4 @@
-const VERSION = 'alo-pwa-v13';
+const VERSION = 'alo-pwa-v14';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
